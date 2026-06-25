@@ -1,0 +1,975 @@
+/* ============================================================
+   WorkoutPage — 左侧数据面板 + 右侧摄像头
+   ============================================================ */
+
+.workout-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg, #f2f2f7);
+  font-family: -apple-system, 'PingFang SC', 'SF Pro Display', sans-serif;
+  overflow: hidden;
+}
+
+/* ── 模式切换器 ───────────────────────────────────── */
+.mode-switcher {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.mode-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-secondary, #8e8e93);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+  background: rgba(0, 122, 255, 0.06);
+  border-color: rgba(0, 122, 255, 0.15);
+  color: var(--primary);
+}
+
+.mode-btn--active {
+  background: rgba(0, 122, 255, 0.1);
+  border-color: rgba(0, 122, 255, 0.3);
+  color: var(--primary);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.12);
+}
+
+.mode-btn svg {
+  flex-shrink: 0;
+}
+
+/* ── 计时器变体 ───────────────────────────────────── */
+.timer-value--countdown {
+  color: var(--primary);
+}
+
+.timer-value--expired {
+  color: #ff3b30;
+  animation: timerPulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes timerPulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.5;
+  }
+}
+
+.counter-value--timed {
+  font-size: 80px;
+}
+
+/* ── 结果面板模式标签 ──────────────────────────────── */
+.result-mode-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #8e8e93);
+  margin-top: 12px;
+}
+
+/* ── 顶栏 ─────────────────────────────────────────── */
+.workout-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.btn-back-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary, #1c1c1e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+  flex-shrink: 0;
+}
+.btn-back-circle:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+.btn-back-circle:active {
+  transform: scale(0.9);
+}
+
+.workout-header-title {
+  flex: 1;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary, #1c1c1e);
+  text-align: center;
+}
+
+.target-chip {
+  padding: 7px 16px;
+  border-radius: 20px;
+  border: none;
+  background: rgba(0, 122, 255, 0.1);
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+.target-chip:hover {
+  background: rgba(0, 122, 255, 0.18);
+}
+
+/* ── 主内容区 ─────────────────────────────────────── */
+.workout-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  padding: 0;
+}
+
+/* ── 左侧数据面板 ───────────────────────────────── */
+.data-panel {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  gap: 20px;
+  overflow-y: auto;
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* 计数器区域 */
+.counter-section {
+  text-align: center;
+  padding: 24px 0 16px;
+}
+
+.counter-value {
+  font-size: 80px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--text-primary, #1c1c1e);
+  transition: color 0.3s ease;
+  letter-spacing: -2px;
+}
+/* 进度 ≥ 100% 金色 */
+.counter-value[data-progress='100'] {
+  color: #ff9500;
+}
+
+.counter-label {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-secondary, #8e8e93);
+  margin-top: 4px;
+}
+
+/* 进度条 */
+.progress-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #34c759, #30d158);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.progress-fill--complete {
+  background: linear-gradient(90deg, #ff9500, #ffb340) !important;
+}
+
+.progress-percent {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #8e8e93);
+  margin-top: 6px;
+}
+
+/* 计时器 */
+.timer-section {
+  text-align: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 16px;
+}
+
+.timer-value {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--text-primary, #1c1c1e);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+}
+
+.timer-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary, #8e8e93);
+  margin-top: 2px;
+}
+
+/* 状态指示器 */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 12px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-secondary, #8e8e93);
+  flex-shrink: 0;
+  transition: background 0.3s ease;
+}
+
+.status-dot--active {
+  background: #34c759;
+  box-shadow: 0 0 8px rgba(52, 199, 89, 0.5);
+}
+
+.status-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary, #8e8e93);
+  transition: color 0.3s ease;
+}
+
+.status-text--active {
+  color: #34c759;
+}
+
+/* 姿态反馈 */
+.feedback-section {
+  min-height: 36px;
+}
+
+.feedback-tag {
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  animation: feedbackPop 0.3s ease;
+}
+
+@keyframes feedbackPop {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.feedback-warning {
+  background: rgba(255, 149, 0, 0.12);
+  color: #d4830a;
+}
+.feedback-error {
+  background: rgba(255, 59, 48, 0.12);
+  color: #d4201a;
+}
+.feedback-success {
+  background: rgba(52, 199, 89, 0.12);
+  color: #248a3d;
+}
+.feedback-idle {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-secondary, #8e8e93);
+}
+
+/* 操作按钮 */
+.action-section {
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.action-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 16px;
+  border: none;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.action-btn:active {
+  transform: scale(0.97);
+}
+
+.action-btn--start {
+  background: linear-gradient(135deg, #34c759, #28a745);
+  color: white;
+  box-shadow: 0 4px 16px rgba(52, 199, 89, 0.35);
+}
+.action-btn--start:hover {
+  box-shadow: 0 6px 24px rgba(52, 199, 89, 0.5);
+}
+
+.action-btn--stop {
+  background: linear-gradient(135deg, #ff3b30, #d63028);
+  color: white;
+  box-shadow: 0 4px 16px rgba(255, 59, 48, 0.35);
+}
+.action-btn--stop:hover {
+  box-shadow: 0 6px 24px rgba(255, 59, 48, 0.5);
+}
+
+.stop-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: white;
+}
+
+.mini-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── 右侧摄像头区域 ──────────────────────────────── */
+.camera-area {
+  flex: 1;
+  position: relative;
+  background: #111;
+  min-width: 0;
+}
+
+/* CameraView 子样式（全屏覆盖） */
+.camera-area .camera-wrapper,
+.camera-area .camera-placeholder {
+  position: absolute;
+  inset: 0;
+}
+
+.camera-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.camera-video,
+.camera-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.camera-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+
+.camera-placeholder-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+}
+
+.camera-placeholder-text {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.camera-placeholder-hint {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 14px;
+}
+
+.camera-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: white;
+  font-size: 16px;
+  z-index: 10;
+}
+
+.camera-overlay .hint {
+  font-size: 13px;
+  color: #aaa;
+}
+
+.camera-error {
+  background: rgba(0, 0, 0, 0.85);
+}
+.error-icon {
+  font-size: 40px;
+}
+.error-title {
+  font-size: 20px;
+  font-weight: 700;
+}
+.error-msg {
+  font-size: 14px;
+  color: #ccc;
+  text-align: center;
+  max-width: 360px;
+}
+
+/* 就绪覆盖层 */
+.camera-ready {
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.camera-ready-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(52, 199, 89, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: readyPulse 2s ease-in-out infinite;
+}
+
+@keyframes readyPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.camera-ready-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.camera-ready-hint {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ── 通知条 ───────────────────────────────────────── */
+.notification-bar {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(28, 28, 30, 0.92);
+  color: white;
+  text-align: center;
+  padding: 14px 24px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 600;
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  animation: slideUp 0.3s ease;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+  z-index: 100;
+  max-width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notification-bar--exiting {
+  opacity: 0;
+  transform: translateX(-50%) translateY(12px);
+  pointer-events: none;
+}
+
+.notification-close {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  opacity: 0.6;
+  border-radius: 50%;
+  transition:
+    opacity 0.15s,
+    background 0.15s;
+}
+
+.notification-close:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ── 弹窗（共享样式在 global.css，以下为页面特有） ── */
+.modal-btn--stop-confirm {
+  background: #ff3b30;
+  color: white;
+  box-shadow: 0 2px 10px rgba(255, 59, 48, 0.3);
+}
+.modal-btn--stop-confirm:hover {
+  background: #d63028;
+}
+
+/* ── 结果摘要面板 ──────────────────────────────── */
+.result-panel {
+  background: var(--bg-card, rgba(255, 255, 255, 0.95));
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border-radius: 24px;
+  padding: 36px 28px 28px;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.3),
+    0 0 0 0.5px rgba(0, 0, 0, 0.08);
+  animation: modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.result-emoji {
+  font-size: 48px;
+  animation: resultBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+}
+
+@keyframes resultBounce {
+  from {
+    opacity: 0;
+    transform: scale(0.5) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.result-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary, #1c1c1e);
+}
+
+.result-stats {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  justify-content: center;
+}
+
+.result-stat {
+  text-align: center;
+  flex: 1;
+}
+
+.result-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary, #1c1c1e);
+}
+
+.result-stat--accent {
+  color: var(--primary);
+  font-size: 28px;
+}
+
+.result-stat-label {
+  font-size: 12px;
+  color: var(--text-secondary, #8e8e93);
+  margin-top: 4px;
+}
+
+.result-stat-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--border, rgba(0, 0, 0, 0.1));
+}
+
+.result-badge {
+  background: rgba(52, 199, 89, 0.12);
+  color: #248a3d;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 20px;
+}
+
+.result-rate {
+  font-size: 13px;
+  color: var(--text-secondary, #8e8e93);
+}
+
+.result-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.modal-btn--confirm {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 2px 10px rgba(0, 122, 255, 0.3);
+}
+.modal-btn--confirm:hover {
+  background: var(--primary-dark);
+}
+
+/* ── Dark Mode ────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .workout-page {
+    background: #000;
+  }
+
+  .workout-header {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .btn-back-circle {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f5f5f7;
+  }
+  .btn-back-circle:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .workout-header-title {
+    color: #f5f5f7;
+  }
+
+  .target-chip {
+    background: rgba(0, 122, 255, 0.2);
+    color: #5ac8fa;
+  }
+
+  .data-panel {
+    border-right-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .counter-value {
+    color: #f5f5f7;
+  }
+  .counter-label {
+    color: #98989d;
+  }
+
+  .progress-track {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .progress-percent {
+    color: #98989d;
+  }
+
+  .timer-section {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .timer-value {
+    color: #f5f5f7;
+  }
+
+  .status-indicator {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .status-dot {
+    background: #98989d;
+  }
+  .status-dot--active {
+    background: #30d158;
+    box-shadow: 0 0 8px rgba(48, 209, 88, 0.5);
+  }
+  .status-text {
+    color: #98989d;
+  }
+  .status-text--active {
+    color: #30d158;
+  }
+
+  .feedback-warning {
+    background: rgba(255, 149, 0, 0.18);
+  }
+  .feedback-error {
+    background: rgba(255, 59, 48, 0.18);
+  }
+  .feedback-success {
+    background: rgba(52, 199, 89, 0.18);
+  }
+  .feedback-idle {
+    background: rgba(255, 255, 255, 0.06);
+    color: #98989d;
+  }
+
+  .modal-input {
+    background: rgba(255, 255, 255, 0.05);
+    color: #f5f5f7;
+  }
+  .modal-input:focus {
+    border-color: #0a84ff;
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.25);
+  }
+}
+
+/* ── 响应式：窄屏时改为上下布局 ──────────────────── */
+@media (max-width: 768px) {
+  .workout-body {
+    flex-direction: column-reverse;
+  }
+
+  .data-panel {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    gap: 12px;
+    border-right: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .counter-section {
+    padding: 8px 16px;
+    min-width: 120px;
+  }
+
+  .counter-value {
+    font-size: 48px;
+  }
+
+  .counter-label {
+    font-size: 14px;
+  }
+
+  .timer-section {
+    padding: 8px 16px;
+    min-width: 100px;
+  }
+
+  .timer-value {
+    font-size: 24px;
+  }
+
+  .status-indicator {
+    width: 100%;
+  }
+
+  .feedback-section {
+    width: 100%;
+  }
+
+  .action-section {
+    width: 100%;
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .action-btn {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .camera-area {
+    flex: 1;
+    min-height: 300px;
+  }
+
+  .progress-track {
+    margin-top: 8px;
+  }
+}
+
+/* ── 移动端竖屏专项优化（< 480px） ────────────────── */
+@media (max-width: 480px) {
+  .workout-header {
+    padding: 12px 16px;
+  }
+
+  /* 安全区域适配 */
+  @supports (padding-top: env(safe-area-inset-top)) {
+    .workout-header {
+      padding-top: calc(env(safe-area-inset-top) + 8px);
+    }
+  }
+
+  .data-panel {
+    flex-direction: column;
+    max-height: 220px;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .counter-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+    min-width: unset;
+  }
+
+  .counter-value {
+    font-size: 40px;
+    letter-spacing: -1px;
+  }
+
+  .counter-label {
+    font-size: 14px;
+    margin-top: 0;
+  }
+
+  .progress-track {
+    margin-top: 0;
+    flex: 1;
+  }
+
+  .progress-percent {
+    display: none;
+  }
+
+  .timer-section {
+    display: none; /* 手机上隐藏大计时器，节省空间 */
+  }
+
+  .status-indicator {
+    display: none; /* 手机上隐藏状态指示器，节省空间 */
+  }
+
+  .feedback-section {
+    min-height: 28px;
+    width: 100%;
+  }
+
+  .feedback-tag {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+
+  .action-section {
+    width: 100%;
+  }
+
+  .action-btn {
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 14px;
+  }
+
+  .camera-area {
+    flex: 1;
+    min-height: 240px;
+  }
+
+  .notification-bar {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+    padding: 12px 20px;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+
+  .modal-box {
+    width: 280px;
+    padding: 24px 20px 20px;
+  }
+
+  .modal-input {
+    font-size: 24px;
+  }
+}
+
+/* ── Dark Mode + 移动端 ─────────────────────────── */
+@media (prefers-color-scheme: dark) and (max-width: 480px) {
+  .data-panel {
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
+}

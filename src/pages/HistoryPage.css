@@ -1,0 +1,344 @@
+/* ============================================================
+   HistoryPage — Apple-style history list
+   ============================================================ */
+
+/* #6: 圆形返回按钮 */
+.header-back-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease;
+  flex-shrink: 0;
+}
+
+.header-back-btn:hover {
+  background: rgba(128, 128, 128, 0.12);
+}
+.header-back-btn:active {
+  transform: scale(0.9);
+}
+
+/* 页头右侧操作按钮 */
+.header-action-btn {
+  padding: 6px 14px;
+  border-radius: 16px;
+  border: none;
+  background: rgba(255, 59, 48, 0.08);
+  color: #ff3b30;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.header-action-btn:hover {
+  background: rgba(255, 59, 48, 0.14);
+}
+
+/* ---- 空状态 ---- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 80px 0 40px;
+}
+
+.empty-icon-wrapper {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.empty-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 240px;
+}
+
+/* ---- 历史列表 ---- */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.history-card:hover {
+  transform: translateX(3px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+}
+
+/* #7: SVG 插画图标区域 */
+.history-icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.history-icon svg {
+  width: 44px;
+  height: 44px;
+}
+
+.history-info {
+  flex: 1;
+}
+
+.history-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.history-date {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 3px;
+}
+
+.history-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.stat-count {
+  font-size: 18px;
+  font-weight: 800;
+  transition: color 0.15s;
+}
+
+.stat-duration {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.stat-mode {
+  font-size: 11px;
+  color: var(--primary);
+  background: rgba(0, 122, 255, 0.08);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.stat-mode--timed {
+  color: #ff9500;
+  background: rgba(255, 149, 0, 0.08);
+}
+
+/* ---- 运动类型筛选 Tab ---- */
+.filter-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 0 16px 12px;
+  overflow-x: auto;
+  flex-shrink: 0;
+  scrollbar-width: none;
+}
+
+.filter-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-tab {
+  padding: 6px 14px;
+  border-radius: 16px;
+  border: none;
+  background: rgba(128, 128, 128, 0.1);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.filter-tab:hover {
+  background: rgba(128, 128, 128, 0.16);
+}
+
+.filter-tab--active {
+  background: rgba(0, 122, 255, 0.12);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ---- 日期分组 ---- */
+.history-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-group-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 8px 4px 4px;
+}
+
+/* ---- 单条删除按钮 ---- */
+.history-card {
+  cursor: pointer;
+}
+
+.history-delete-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0;
+  transition:
+    opacity 0.15s,
+    background 0.15s,
+    color 0.15s;
+}
+
+.history-card:hover .history-delete-btn {
+  opacity: 1;
+}
+
+.history-delete-btn:hover {
+  background: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+}
+
+/* 键盘焦点时删除按钮也可见（WCAG 2.4.7） */
+.history-delete-btn:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* 触屏设备：删除按钮始终可见（无 hover 效果） */
+@media (hover: none) {
+  .history-delete-btn {
+    opacity: 0.6;
+  }
+}
+
+/* ---- #14: 弹窗（共享样式在 global.css，以下为页面特有） ---- */
+.modal-btn--danger {
+  background: #ff3b30;
+  color: white;
+  box-shadow: 0 2px 10px rgba(255, 59, 48, 0.3);
+}
+
+.modal-btn--danger:hover {
+  background: #d63028;
+}
+
+/* ── Dark Mode ────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .header-back-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f5f5f7;
+  }
+  .header-back-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .header-action-btn {
+    background: rgba(255, 59, 48, 0.15);
+    color: #ff6961;
+  }
+  .header-action-btn:hover {
+    background: rgba(255, 59, 48, 0.22);
+  }
+
+  .history-card {
+    background: #1c1c1e;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+  }
+  .history-card:hover {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+  }
+
+  .empty-icon-wrapper {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .filter-tab {
+    background: rgba(255, 255, 255, 0.08);
+    color: #98989d;
+  }
+  .filter-tab:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .filter-tab--active {
+    background: rgba(10, 132, 255, 0.2);
+    color: #5ac8fa;
+  }
+
+  .stat-mode {
+    color: #5ac8fa;
+    background: rgba(10, 132, 255, 0.15);
+  }
+
+  .stat-mode--timed {
+    color: #ff9f0a;
+    background: rgba(255, 159, 10, 0.15);
+  }
+
+  .history-delete-btn:hover {
+    background: rgba(255, 69, 58, 0.15);
+    color: #ff6961;
+  }
+
+  .modal-btn--danger {
+    background: #ff453a;
+  }
+  .modal-btn--danger:hover {
+    background: #ff6961;
+  }
+}

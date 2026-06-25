@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+
+# Tauri / Rust
+src-tauri/target/
+src-tauri/Cargo.lock
+
+# MediaPipe local cache (downloaded by scripts/setup-mediapipe.mjs)
+public/mediapipe/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+build-log.txt
+
+# IDE workspace data
+.codebuddy/
+.workbuddy/
+
+# Test coverage
+coverage/
+
+# Tauri updater private key (DO NOT COMMIT)
+*.key
+!Cargo.lock
+
+# Capacitor / Android (legacy)
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+*.apk
+*.aab

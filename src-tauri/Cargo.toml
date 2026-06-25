@@ -1,0 +1,18 @@
+[package]
+name = "ai-sport-desktop"
+version = "1.0.0"
+description = "AI运动助手桌面版"
+authors = ["Gakiwu"]
+edition = "2021"
+
+[lib]
+name = "ai_sport_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-store = "2"
+tauri-plugin-updater = "2"

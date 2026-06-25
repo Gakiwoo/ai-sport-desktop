@@ -1,0 +1,53 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "AI运动助手",
+  "version": "1.0.0",
+  "identifier": "com.gakiwu.ai-sport",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "title": "AI运动助手",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://gakiwoo.com https://cdn.jsdelivr.net https://unpkg.com https://registry.npmmirror.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: mediastream:; connect-src 'self' https://gakiwoo.com https://cdn.jsdelivr.net https://unpkg.com https://registry.npmmirror.com https://github.com; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
+    "icon": [
+      "icons/icon_32x32.png",
+      "icons/icon_128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon_256x256.png",
+      "icons/icon.ico"
+    ],
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/Gakiwoo/ai-sport-desktop/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQzMkY2RTQzQkYyQjZFMzAKUldTSEE2NEJBUWlIVDZWeUtYTUFQMFhQZTYzcDVDRy9pc0xVMjBYL2wwaURkUmtoUjNJeFRQZ28K",
+      "note": "此公钥为示例占位，请运行 npm run tauri:signer 生成真实密钥对后替换"
+    }
+  }
+}
