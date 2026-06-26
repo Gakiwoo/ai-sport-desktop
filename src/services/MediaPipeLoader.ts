@@ -7,9 +7,9 @@
 const DEFAULT_CDN_URLS = [
   '/mediapipe/pose.js',
   'https://gakiwoo.com/static/mediapipe/pose/pose.js',
-  'https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/files/pose.js',
-  'https://unpkg.com/@mediapipe/pose@0.5.1675469404/files/pose.js',
-  'https://registry.npmmirror.com/@mediapipe/pose@0.5.1675469404/files/pose.js',
+  'https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js',
+  'https://unpkg.com/@mediapipe/pose@0.5.1675469404/pose.js',
+  'https://registry.npmmirror.com/@mediapipe/pose@0.5.1675469404/pose.js',
 ];
 
 /**
@@ -18,12 +18,12 @@ const DEFAULT_CDN_URLS = [
  * 更新 MediaPipe 版本时需同步更新哈希值
  */
 const DEFAULT_SRI_HASHES: Record<string, string> = {
-  'https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/files/pose.js':
-    'sha384-1gqTpXD6ODYOxqvGcYmgl0gna2BRjTEHURXZD4LJ1IoVY+fCQJ0QDSY7T0H+VHNe',
-  'https://unpkg.com/@mediapipe/pose@0.5.1675469404/files/pose.js':
-    'sha384-1gqTpXD6ODYOxqvGcYmgl0gna2BRjTEHURXZD4LJ1IoVY+fCQJ0QDSY7T0H+VHNe',
-  'https://registry.npmmirror.com/@mediapipe/pose@0.5.1675469404/files/pose.js':
-    'sha384-1gqTpXD6ODYOxqvGcYmgl0gna2BRjTEHURXZD4LJ1IoVY+fCQJ0QDSY7T0H+VHNe',
+  'https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js':
+    'sha384-qcJQ+n/ZcF15Xu2EoRupB4Av+GEAGeW0Td1mp2A90u0NdNLzLYQVMUq1Ax1YAHqk',
+  'https://unpkg.com/@mediapipe/pose@0.5.1675469404/pose.js':
+    'sha384-qcJQ+n/ZcF15Xu2EoRupB4Av+GEAGeW0Td1mp2A90u0NdNLzLYQVMUq1Ax1YAHqk',
+  'https://registry.npmmirror.com/@mediapipe/pose@0.5.1675469404/pose.js':
+    'sha384-qcJQ+n/ZcF15Xu2EoRupB4Av+GEAGeW0Td1mp2A90u0NdNLzLYQVMUq1Ax1YAHqk',
 };
 
 let pendingLoad: Promise<typeof window.Pose> | null = null;

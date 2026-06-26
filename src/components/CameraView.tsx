@@ -74,26 +74,23 @@ export default function CameraView({ onPoseDetected, isActive, exerciseType }: C
     if (videoRef.current) videoRef.current.srcObject = null;
   }, []);
 
-  const drawSkeleton = useCallback(
-    (landmarks: Landmark[]) => {
-      const canvas = canvasRef.current;
-      const video = videoRef.current;
-      if (!canvas || !video) return;
+  const drawSkeleton = useCallback((landmarks: Landmark[]) => {
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    if (!canvas || !video) return;
 
-      const vw = video.videoWidth;
-      const vh = video.videoHeight;
-      if (canvas.width !== vw || canvas.height !== vh) {
-        canvas.width = vw;
-        canvas.height = vh;
-      }
-      if (!ctxRef.current) ctxRef.current = canvas.getContext('2d');
-      const ctx = ctxRef.current;
-      if (!ctx) return;
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    if (canvas.width !== vw || canvas.height !== vh) {
+      canvas.width = vw;
+      canvas.height = vh;
+    }
+    if (!ctxRef.current) ctxRef.current = canvas.getContext('2d');
+    const ctx = ctxRef.current;
+    if (!ctx) return;
 
-      drawSkeletonOnCanvas(ctx, canvas, landmarks, exerciseTypeRef.current);
-    },
-    [],
-  );
+    drawSkeletonOnCanvas(ctx, canvas, landmarks, exerciseTypeRef.current);
+  }, []);
 
   // 核心修复：startCamera 不依赖任何 props/回调，只初始化一次
   const initCameraAndPose = useCallback(async () => {
@@ -107,9 +104,9 @@ export default function CameraView({ onPoseDetected, isActive, exerciseType }: C
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter((d) => d.kind === 'videoinput');
-        console.log(`[AI Sport] 可用摄像头数量: ${videoDevices.length}`);
+        console.warn(`[AI Sport] 可用摄像头数量: ${videoDevices.length}`);
         videoDevices.forEach((d, i) => {
-          console.log(
+          console.warn(
             `[AI Sport] 摄像头[${i}]: ${d.label || '未命名'} (id=${d.deviceId.slice(0, 8)}...)`,
           );
         });
@@ -153,7 +150,7 @@ export default function CameraView({ onPoseDetected, isActive, exerciseType }: C
       }
 
       const track = stream.getVideoTracks()[0];
-      console.log(
+      console.warn(
         `[AI Sport] 摄像头已连接: ${track.label}, 分辨率: ${track.getSettings().width}x${track.getSettings().height}`,
       );
 
@@ -186,7 +183,7 @@ export default function CameraView({ onPoseDetected, isActive, exerciseType }: C
       if (!mountedRef.current) return;
 
       // 3. 按需加载 MediaPipe Pose（进入训练页后才触发 CDN 加载）
-      console.log('[AI Sport] 正在初始化 MediaPipe Pose...');
+      console.warn('[AI Sport] 正在初始化 MediaPipe Pose...');
       setLoadingStep('正在加载 AI 引擎...');
 
       const MPPose = await loadMediaPipePose();
@@ -211,7 +208,7 @@ export default function CameraView({ onPoseDetected, isActive, exerciseType }: C
 
       for (let cdnIdx = 0; cdnIdx < CDN_FALLBACKS.length && !poseReady; cdnIdx++) {
         const cdnBase = CDN_FALLBACKS[cdnIdx];
-        console.log(`[AI Sport] 尝试 CDN[${cdnIdx}]: ${cdnBase}`);
+        console.warn(`[AI Sport] 尝试 CDN[${cdnIdx}]: ${cdnBase}`);
 
         let candidate: MediaPipePose | null = null;
         try {
@@ -258,7 +255,7 @@ export default function CameraView({ onPoseDetected, isActive, exerciseType }: C
           }
           pose = candidate!;
           poseReady = true;
-          console.log(`[AI Sport] MediaPipe Pose 初始化成功，使用 CDN[${cdnIdx}]`);
+          console.warn(`[AI Sport] MediaPipe Pose 初始化成功，使用 CDN[${cdnIdx}]`);
         } catch (err) {
           if (cdnTimeoutRef.current) {
             clearTimeout(cdnTimeoutRef.current);
@@ -295,7 +292,6 @@ export default function CameraView({ onPoseDetected, isActive, exerciseType }: C
           perfRef.current.fps = perfRef.current.frameCount;
           perfRef.current.frameCount = 0;
           perfRef.current.lastTime = now;
-          console.debug(`[AI Sport] Pose FPS: ${perfRef.current.fps}`);
         }
 
         drawSkeleton(results.poseLandmarks);
@@ -320,7 +316,7 @@ export default function CameraView({ onPoseDetected, isActive, exerciseType }: C
         cameraStateRef.current = 'ready'; // 立即更新 ref，不等 React batch
         setCameraState('ready');
         setLoadingStep('');
-        console.log('[AI Sport] 摄像头和 AI 模型初始化完成');
+        console.warn('[AI Sport] 摄像头和 AI 模型初始化完成');
       }
     } catch (err) {
       console.error('[AI Sport] 初始化失败:', err);

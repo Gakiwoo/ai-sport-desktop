@@ -24,7 +24,7 @@ const FILES = [
 ];
 
 // 优先从 jsdelivr CDN 下载（国内用户可改用 npmmirror）
-const CDN_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/files';
+const CDN_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404';
 
 async function downloadFile(filename) {
   const url = `${CDN_BASE}/${filename}`;
@@ -51,15 +51,22 @@ async function main() {
 
   mkdirSync(publicDir, { recursive: true });
 
+  let failed = 0;
+
   for (const file of FILES) {
     try {
       await downloadFile(file);
     } catch (err) {
       console.error(`  [失败] ${file}: ${err.message}`);
       console.log('\n提示: 如果下载失败，应用运行时会自动从 CDN 加载，不影响正常使用。\n');
-      process.exitCode = 1;
-      return;
+      failed++;
     }
+  }
+
+  if (failed > 0) {
+    console.warn(`\nMediaPipe Pose local cache skipped ${failed} file(s).`);
+    console.warn('Runtime CDN fallback remains available; build will continue.\n');
+    return;
   }
 
   console.log('\n✅ MediaPipe Pose 模型文件已缓存到 public/mediapipe/');

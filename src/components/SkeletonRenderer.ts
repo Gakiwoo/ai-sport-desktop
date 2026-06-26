@@ -9,14 +9,21 @@ import PoseDetectionService from '../services/PoseDetectionService';
 // ── 骨骼连接定义 ──
 const POSE_CONNECTIONS: [number, number][] = [
   [11, 12],
-  [11, 13], [13, 15],
-  [12, 14], [14, 16],
-  [11, 23], [12, 24],
+  [11, 13],
+  [13, 15],
+  [12, 14],
+  [14, 16],
+  [11, 23],
+  [12, 24],
   [23, 24],
-  [23, 25], [25, 27],
-  [24, 26], [26, 28],
-  [27, 29], [28, 30],
-  [29, 31], [30, 32],
+  [23, 25],
+  [25, 27],
+  [24, 26],
+  [26, 28],
+  [27, 29],
+  [28, 30],
+  [29, 31],
+  [30, 32],
 ];
 
 const ARM_CONNECTIONS = new Set(['11-13', '13-15', '12-14', '14-16']);
@@ -42,7 +49,7 @@ export function computeMotionVisuals(
   exerciseType?: ExerciseType,
 ): { motionRatio: number; hud: HUDConfig } {
   let motionRatio = 0;
-  let hud: HUDConfig = {
+  const hud: HUDConfig = {
     label: '',
     gradientColors: ['rgba(0,200,128,0.6)', 'rgba(0,255,200,0.8)', 'rgba(0,200,128,0.6)'],
   };
@@ -268,7 +275,12 @@ function drawHUD(
   // 进度填充
   if (exerciseType === 'jumping_jacks') {
     const fillW = (hudW / 2) * motionRatio;
-    const gradient = ctx.createLinearGradient(hudX + hudW / 2 - fillW, 0, hudX + hudW / 2 + fillW, 0);
+    const gradient = ctx.createLinearGradient(
+      hudX + hudW / 2 - fillW,
+      0,
+      hudX + hudW / 2 + fillW,
+      0,
+    );
     gradient.addColorStop(0, hud.gradientColors[0]);
     gradient.addColorStop(0.5, hud.gradientColors[1]);
     gradient.addColorStop(1, hud.gradientColors[2]);

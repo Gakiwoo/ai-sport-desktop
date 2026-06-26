@@ -1,4 +1,4 @@
-import { render, act, screen, waitFor } from '@testing-library/react';
+import { render, act, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useWorkout } from '../hooks/useWorkout';
@@ -71,13 +71,31 @@ describe('WorkoutPage', () => {
     expect(stopMock).not.toHaveBeenCalled();
   });
 
-  it('renders readable Chinese workout labels', async () => {
+  it('renders readable Chinese workout labels', () => {
+    // 本测试只验证标签渲染，不需要 timeUp=true（那会触发定时模式的
+    // showNotification useEffect 导致 act() 警告）。单独覆盖 mock 关掉 timeUp。
+    vi.mocked(useWorkout).mockReturnValue({
+      isActive: false,
+      count: 0,
+      mode: 'timed',
+      targetCount: 20,
+      setTargetCount: vi.fn(),
+      targetDuration: 60,
+      setTargetDuration: vi.fn(),
+      isSaving: false,
+      timeUp: false,
+      startTime: null,
+      processFrame: vi.fn(),
+      getFeedback: vi.fn(),
+      start: vi.fn(),
+      stop: stopMock,
+      switchMode: vi.fn(),
+    });
+
     renderWorkoutPage();
 
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: '深蹲' })).toBeTruthy();
-      expect(screen.getByRole('button', { name: /目标: 01:00/ })).toBeTruthy();
-      expect(screen.getByRole('button', { name: /开始训练/ })).toBeTruthy();
-    });
+    expect(screen.getByRole('heading', { name: '深蹲' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /目标: 01:00/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /开始训练/ })).toBeTruthy();
   });
 });

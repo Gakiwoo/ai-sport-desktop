@@ -14,9 +14,7 @@ vi.mock('../services/StorageService', () => ({
 }));
 
 vi.mock('../components/ExerciseIllustration', () => ({
-  default: ({ type }: { type: string }) => (
-    <span data-testid={`illustration-${type}`}>{type}</span>
-  ),
+  default: ({ type }: { type: string }) => <span data-testid={`illustration-${type}`}>{type}</span>,
 }));
 
 function makeSession(overrides: Partial<WorkoutSession> = {}): WorkoutSession {
@@ -93,8 +91,18 @@ describe('HistoryPage', () => {
 
   describe('history list', () => {
     it('groups workouts by relative date', async () => {
-      const today = makeSession({ id: 'a', timestamp: Date.now() - 1000, exerciseType: 'jump_rope', count: 50 });
-      const yesterday = makeSession({ id: 'b', timestamp: Date.now() - 24 * 60 * 60 * 1000, exerciseType: 'squats', count: 20 });
+      const today = makeSession({
+        id: 'a',
+        timestamp: Date.now() - 1000,
+        exerciseType: 'jump_rope',
+        count: 50,
+      });
+      const yesterday = makeSession({
+        id: 'b',
+        timestamp: Date.now() - 24 * 60 * 60 * 1000,
+        exerciseType: 'squats',
+        count: 20,
+      });
       vi.mocked(StorageService.getWorkoutHistory).mockResolvedValue([today, yesterday]);
 
       renderPage();
@@ -178,9 +186,7 @@ describe('HistoryPage', () => {
 
       await waitFor(() => {
         expect(screen.getByText('确认清空')).toBeTruthy();
-        expect(
-          screen.getByText('将删除所有训练记录，此操作不可撤销。'),
-        ).toBeTruthy();
+        expect(screen.getByText('将删除所有训练记录，此操作不可撤销。')).toBeTruthy();
       });
 
       // 确认清空（modal 内的 danger 按钮，用 getAllByRole 取最后一个）

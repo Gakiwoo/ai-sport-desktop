@@ -62,6 +62,24 @@ export default function WorkoutPage() {
   /** 反馈更新节流：每 250ms 最多更新一次（30fps→4fps），减少不必要渲染 */
   const lastFeedbackTimeRef = useRef(0);
 
+  const showNotification = useCallback((msg: string) => {
+    if (notifTimerRef.current) clearTimeout(notifTimerRef.current);
+    if (notifExitTimerRef.current) {
+      clearTimeout(notifExitTimerRef.current);
+      notifExitTimerRef.current = null;
+    }
+    setNotification(msg);
+    setNotifExiting(false);
+    notifTimerRef.current = setTimeout(() => {
+      setNotifExiting(true);
+      notifExitTimerRef.current = setTimeout(() => {
+        setNotification(null);
+        setNotifExiting(false);
+        notifExitTimerRef.current = null;
+      }, 250);
+    }, 4000);
+  }, []);
+
   // 组件卸载清理通知定时器
   useEffect(() => {
     return () => {
@@ -160,7 +178,7 @@ export default function WorkoutPage() {
       showNotification(`🎉 恭喜！已完成目标 ${targetCount} 次！`);
       playGoalReached();
     }
-  }, [count, targetCount, isActive, mode]);
+  }, [count, targetCount, isActive, mode, showNotification]);
 
   // 定时模式时间到提示
   useEffect(() => {
@@ -179,7 +197,7 @@ export default function WorkoutPage() {
         }
       }, 800);
     }
-  }, [timeUp, mode, count]);
+  }, [timeUp, mode, count, showNotification]);
 
   useEffect(() => {
     if (isActive) hasShownCompletion.current = false;
@@ -199,25 +217,6 @@ export default function WorkoutPage() {
     },
     [processFrame, getFeedback],
   );
-
-  // 通知条自动消失
-  const showNotification = useCallback((msg: string) => {
-    if (notifTimerRef.current) clearTimeout(notifTimerRef.current);
-    if (notifExitTimerRef.current) {
-      clearTimeout(notifExitTimerRef.current);
-      notifExitTimerRef.current = null;
-    }
-    setNotification(msg);
-    setNotifExiting(false);
-    notifTimerRef.current = setTimeout(() => {
-      setNotifExiting(true);
-      notifExitTimerRef.current = setTimeout(() => {
-        setNotification(null);
-        setNotifExiting(false);
-        notifExitTimerRef.current = null;
-      }, 250);
-    }, 4000);
-  }, []);
 
   const dismissNotification = useCallback(() => {
     if (notifTimerRef.current) clearTimeout(notifTimerRef.current);

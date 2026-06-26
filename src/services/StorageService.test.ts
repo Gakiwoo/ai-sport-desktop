@@ -125,6 +125,40 @@ describe('StorageService', () => {
     expect(lines.length).toBe(2); // header + 1 data row
   });
 
+  it('escapes CSV fields containing double quotes or commas', async () => {
+    // 构造一条 id 含特殊字符的训练记录，验证 RFC 4180 转义
+    const session: WorkoutSession = {
+      id: 'id-with-"quotes"-and,comma',
+      exerciseType: 'squats',
+      mode: 'count',
+      count: 10,
+      duration: 30,
+      timestamp: 1_700_000_000_000,
+    };
+    await service.saveWorkout(session);
+
+    const csv = await service.exportAsCSV();
+    const lines = csv.split('\n');
+
+    // 含双引号和逗号的 id 字段应被双引号包裹，且内部引号倍写
+    expect(lines.length).toBe(2);
+    const dataLine = lines[1];
+    expect(dataLine).toMatch(/^"id-with-""quotes""-and,comma",/);
+  });
+
+  it('does not wrap clean CSV fields in unnecessary quotes', async () => {
+    await service.saveWorkout(makeSession(1));
+
+    const csv = await service.exportAsCSV();
+    const lines = csv.split('\n');
+
+    // 所有字段均为数字/枚举/UUID，不应出现双引号包裹（除了 id 可能恰好含特殊字符）
+    for (const line of lines) {
+      const quoteCount = (line.match(/"/g) || []).length;
+      expect(quoteCount).toBe(0);
+    }
+  });
+
   it('imports data from JSON, skipping duplicates', async () => {
     await service.saveWorkout(makeSession(1));
 

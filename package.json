@@ -10,7 +10,7 @@
     "test:watch": "vitest",
     "preview": "vite preview",
     "tauri": "tauri",
-    "tauri:signer": "tauri signer generate --keys src-tauri/updater.key --password \"\" 2>NUL || npx tauri signer generate --keys src-tauri/updater.key",
+    "tauri:signer": "tauri signer generate --write-keys src-tauri/updater.key --password \"\" --ci 2>NUL || npx tauri signer generate --write-keys src-tauri/updater.key --ci",
     "setup:mediapipe": "node scripts/setup-mediapipe.mjs",
     "prebuild": "npm run setup:mediapipe",
     "lint": "eslint src --ext .ts,.tsx --report-unused-disable-directives --max-warnings 0",

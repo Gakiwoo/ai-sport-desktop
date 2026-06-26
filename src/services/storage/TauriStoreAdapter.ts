@@ -1,3 +1,4 @@
+import type { Store } from '@tauri-apps/plugin-store';
 import type { IStorageAdapter } from './IStorageAdapter';
 
 /**
@@ -16,7 +17,7 @@ import type { IStorageAdapter } from './IStorageAdapter';
  *   .plugin(tauri_plugin_store::Builder::default().build())
  */
 export class TauriStoreAdapter implements IStorageAdapter {
-  private store: any | null = null;
+  private store: Store | null = null;
   private initPromise: Promise<void> | null = null;
   private readonly storeFile = 'ai-sport-store.json';
 

@@ -124,6 +124,15 @@ class StorageService {
     );
   }
 
+  /** CSV 字段转义（RFC 4180）：含逗号/双引号/换行时套双引号，内部双引号倍写 */
+  private escapeCSV(value: string | number): string {
+    const s = String(value);
+    if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+      return `"${s.replace(/"/g, '""')}"`;
+    }
+    return s;
+  }
+
   /** 导出训练数据为 CSV 字符串 */
   async exportAsCSV(): Promise<string> {
     const history = await this.getWorkoutHistory();
@@ -137,9 +146,11 @@ class StorageService {
         s.duration,
         s.timestamp,
         new Date(s.timestamp).toLocaleDateString('zh-CN'),
-      ].join(','),
+      ]
+        .map((v) => this.escapeCSV(v))
+        .join(','),
     );
-    return [headers.join(','), ...rows].join('\n');
+    return [headers.map((h) => this.escapeCSV(h)).join(','), ...rows].join('\n');
   }
 
   /** 导入训练数据（从 JSON 字符串） */

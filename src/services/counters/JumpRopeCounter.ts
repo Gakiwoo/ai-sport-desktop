@@ -184,7 +184,7 @@ export class JumpRopeCounter extends ExerciseCounter {
       this.landThreshold = this.takeoffThreshold * 0.5;
 
       if (JumpRopeCounter.DEBUG) {
-        console.log(
+        console.warn(
           `[JumpRope] 校准完成 — ` +
             `身高比例: ${this.bodyHeight.toFixed(4)}, ` +
             `身体基线: ${this.bodyBaseline.toFixed(4)}, ` +
@@ -354,7 +354,7 @@ export class JumpRopeCounter extends ExerciseCounter {
   private debugLog(msg: string, f: FrameFeatures): void {
     if (!JumpRopeCounter.DEBUG) return;
     if (this.debugFrameCount % 30 === 0 || msg.includes('计数') || msg.includes('\u2705')) {
-      console.log(
+      console.warn(
         `[JumpRope] [${this.debugFrameCount}] ${msg} | ` +
           `v=${f.velocity.toFixed(4)} lift=${f.ankleLift.toFixed(4)} ` +
           `wristAmp=${f.wristAmplitude.toFixed(4)} ` +

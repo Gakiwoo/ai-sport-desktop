@@ -2,11 +2,7 @@ import { Fragment, Suspense, lazy } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import UpdateNotification from './components/UpdateNotification';
-import ErrorReporter from './services/ErrorReporter';
 import HomePage from './pages/HomePage';
-
-// 初始化错误上报器（捕获全局异常和未处理 Promise rejection）
-ErrorReporter.init({ appVersion: '1.0.0' });
 
 const WorkoutPage = lazy(() => import('./pages/WorkoutPage'));
 const HistoryPage = lazy(() => import('./pages/HistoryPage'));

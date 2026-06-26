@@ -78,7 +78,9 @@ const CameraOverlay = memo(function CameraOverlay({
   if (cameraState === 'error') {
     return (
       <div className="camera-overlay camera-error" role="alert">
-        <span className="error-icon" aria-hidden="true">⚠️</span>
+        <span className="error-icon" aria-hidden="true">
+          ⚠️
+        </span>
         <p className="error-title">摄像头不可用</p>
         <p className="error-msg">{errorMsg}</p>
       </div>
