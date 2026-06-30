@@ -1,5 +1,19 @@
+# Build output
 dist/
 src-tauri/target/
+
+# Dependencies
 node_modules/
+
+# Generated / cache / coverage
 *.min.js
 *.min.css
+coverage/
+*.tmp
+
+# MediaPipe (downloaded)
+public/mediapipe/
+
+# IDE / OS
+.vscode/
+.idea/

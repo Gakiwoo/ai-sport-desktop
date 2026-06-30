@@ -7,7 +7,6 @@ dist-ssr/
 
 # Tauri / Rust
 src-tauri/target/
-src-tauri/Cargo.lock
 
 # MediaPipe local cache (downloaded by scripts/setup-mediapipe.mjs)
 public/mediapipe/
@@ -41,8 +40,15 @@ build-log.txt
 coverage/
 
 # Tauri updater private key (DO NOT COMMIT)
-*.key
-!Cargo.lock
+src-tauri/updater.key
+src-tauri/updater.key.pub
+
+# Temporary / cache files
+*.tmp
+%GIT_ASKPASS%
+
+# Claude / AI agent local settings
+.claude/
 
 # Capacitor / Android (legacy)
 android/.gradle/

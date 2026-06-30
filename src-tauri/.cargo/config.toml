@@ -3,13 +3,15 @@
 # 把编译产物目录（target）固定到同步盘之外，避免百度网盘/OneDrive 等同步盘
 # 对 build-script 的文件锁竞争导致的 "os error 5（拒绝访问）" 编译失败。
 #
-# 推荐方式 1（本文件）：将下方路径改为本机同步盘之外的目录
-# 推荐方式 2（环境变量）：删除本文件，改用环境变量
-#     PowerShell: $env:CARGO_TARGET_DIR = "D:\cargo-target\ai-sport-desktop"
-#     CMD:        set CARGO_TARGET_DIR=D:\cargo-target\ai-sport-desktop
-#     macOS/Linux: export CARGO_TARGET_DIR=$HOME/.cache/ai-sport-desktop-target
+# 本文件使用相对于 Cargo 工作区根目录（src-tauri/）的路径，
+# 将 target 放在项目根目录之外，跨平台兼容 Windows / macOS / Linux。
+#
+# 如需完全自定义路径，可删除本文件，改用环境变量：
+#     Windows PowerShell:  $env:CARGO_TARGET_DIR = "D:\cargo-target\ai-sport-desktop"
+#     Windows CMD:         set CARGO_TARGET_DIR=D:\cargo-target\ai-sport-desktop
+#     macOS / Linux:       export CARGO_TARGET_DIR=$HOME/.cache/ai-sport-desktop-target
 #
 # 注意：target 目录体积较大（可达数 GB）且会频繁变动，不应纳入同步盘。
 
 [build]
-target-dir = "D:\\cargo-target\\ai-sport-desktop"
+target-dir = "../.cargo-target"

@@ -37,9 +37,15 @@
    ```bash
    # Windows（PowerShell）
    winget install Rustlang.Rustup
+
+   # macOS
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
    # 或访问 https://rustup.rs 下载安装
    ```
-3. **Tauri 系统依赖**（Windows 需要 WebView2，Win10/11 已内置）
+3. **Tauri 系统依赖**：
+   - **Windows**：需要 WebView2（Win10/11 已内置）
+   - **macOS**：需要 Xcode Command Line Tools（`xcode-select --install`）
 
 ### 安装与运行
 
@@ -47,14 +53,19 @@
 # 1. 安装前端依赖
 npm install
 
-# 2. （推荐）下载 AI 模型到本地，首次启动无需网络
+# 2. （可选）生成全平台图标（首次或更换图标后执行）
+npm run tauri:icons
+
+# 3. （推荐）下载 AI 模型到本地，首次启动无需网络
 npm run setup:mediapipe
 
-# 3. 开发模式（热重载）
+# 4. 开发模式（热重载）
 npm run tauri dev
 
-# 4. 生产构建（生成 .exe/.msi 安装包）
+# 5. 生产构建
 npm run tauri build
+# Windows → src-tauri/target/release/bundle/msi/*.msi / *.exe
+# macOS   → src-tauri/target/release/bundle/dmg/*.dmg
 ```
 
 ### 生成更新签名密钥
@@ -68,12 +79,16 @@ npm run tauri:signer
 ### 同步盘注意事项
 
 若项目位于百度网盘/OneDrive 等同步盘内，Rust 编译可能因文件锁竞争报 `os error 5`。
-已在 `src-tauri/.cargo/config.toml` 中将编译产物目录指向 `D:\cargo-target\`。
-换机器时请修改该路径，或设置环境变量：
+已在 `src-tauri/.cargo/config.toml` 中将编译产物目录指向项目外的 `../.cargo-target/`（相对于 `src-tauri/`），跨平台兼容 Windows / macOS。
+
+如需自定义路径，可删除该配置文件，改用环境变量：
 
 ```powershell
-# PowerShell
+# Windows PowerShell
 $env:CARGO_TARGET_DIR = "D:\cargo-target\ai-sport-desktop"
+
+# macOS / Linux
+export CARGO_TARGET_DIR=$HOME/.cache/ai-sport-desktop-target
 ```
 
 ## 项目结构
@@ -140,7 +155,8 @@ scripts/                      # 辅助脚本
 |------|------|
 | `npm run dev` | Vite 开发服务器 |
 | `npm run tauri dev` | Tauri 开发模式（含热重载）|
-| `npm run tauri build` | Tauri 生产构建 |
+| `npm run tauri build` | Tauri 生产构建（Windows .msi + macOS .dmg）|
+| `npm run tauri:icons` | 从源 PNG 生成全平台图标（含 .icns / .ico）|
 | `npm run setup:mediapipe` | 下载 AI 模型到本地 |
 | `npm run tauri:signer` | 生成更新签名密钥对 |
 | `npm test` | 运行单元测试 |
@@ -162,3 +178,38 @@ scripts/                      # 辅助脚本
 - ✅ 错误上报服务（本地日志 + 远程端点）
 - ✅ TypeScript strict 模式全程开启
 - ✅ 完善的单元测试覆盖（核心逻辑 + 算法 + 组件）
+- ✅ 跨平台构建：Windows (.msi/.exe) + macOS (.dmg)
+
+## macOS 构建注意事项
+
+### 本地构建
+
+在 macOS 上本地构建 `.dmg` 安装包：
+
+```bash
+# 安装 Xcode Command Line Tools（如未安装）
+xcode-select --install
+
+# 生成图标（如首次构建或更换图标）
+npm run tauri:icons
+
+# 构建 .dmg
+npm run tauri build
+```
+
+构建产物位于 `src-tauri/target/release/bundle/dmg/`。
+
+### 代码签名（发布到非 App Store）
+
+若需分发到非 App Store 渠道，需要 Apple Developer 证书进行签名：
+
+1. 在 [Apple Developer](https://developer.apple.com) 注册并获取 Developer ID Application 证书
+2. 在 GitHub Actions Secrets 中配置：
+   - `APPLE_CERTIFICATE` — Base64 编码的 .p12 证书
+   - `APPLE_CERTIFICATE_PASSWORD` — 证书密码
+   - `APPLE_SIGNING_IDENTITY` — 签名身份名称
+   - `APPLE_ID` — Apple ID 邮箱
+   - `APPLE_PASSWORD` — App 专用密码
+   - `APPLE_TEAM_ID` — Team ID
+
+> **提示**：未签名的 `.dmg` 在 macOS 上首次打开时需要右键 → "打开" 绕过 Gatekeeper。开发测试阶段无需签名。

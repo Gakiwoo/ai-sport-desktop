@@ -1,0 +1,74 @@
+name: CI (Windows)
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  VITE_MEDIAPIPE_CDN: https://cdn.jsdelivr.net
+  CARGO_TARGET_DIR: ${{ github.workspace }}/src-tauri/target
+
+jobs:
+  lint-test-build:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        node-version: [22]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm ci --legacy-peer-deps
+
+      # --- Stage 1: Lint ---
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Check Prettier formatting
+        run: npm run format:check
+
+      # --- Stage 2: Test ---
+      - name: Run tests
+        run: npm run test
+
+      # --- Stage 3: Build ---
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Build Tauri app (release)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}-v__VERSION__
+          releaseName: 'AI运动助手 v__VERSION__'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: true
+          prerelease: false
