@@ -14,8 +14,8 @@ function getAudioContext(): AudioContext {
   }
   // 修复：如果 AudioContext 处于 suspended 状态（常见于未交互前创建），主动 resume
   if (audioCtx.state === 'suspended') {
-    audioCtx.resume().catch(() => {
-      /* 静默 */
+    audioCtx.resume().catch((err) => {
+      console.debug('[SoundService] AudioContext resume failed (non-critical):', err);
     });
   }
   return audioCtx;
@@ -46,8 +46,8 @@ export function playCountTick(): void {
 
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.15);
-  } catch {
-    // 静默失败，不影响训练
+  } catch (err) {
+    console.debug('[SoundService] playCountTick failed (non-critical):', err);
   }
 }
 
@@ -79,7 +79,7 @@ export function playGoalReached(): void {
       osc.start(ctx.currentTime + i * 0.12);
       osc.stop(ctx.currentTime + i * 0.12 + 0.3);
     });
-  } catch {
-    // 静默失败
+  } catch (err) {
+    console.debug('[SoundService] playGoalReached failed (non-critical):', err);
   }
 }

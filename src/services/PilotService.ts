@@ -3,6 +3,7 @@ import {
   type Classroom,
   type Device,
   type ExerciseSessionRecord,
+  type ExerciseType,
   type PilotDataPackage,
   type PilotEntities,
   type PilotHistoryFilter,
@@ -12,6 +13,7 @@ import {
   type Student,
   type TrainingTask,
 } from '../types';
+import { EXERCISE_NAMES } from '../constants/exerciseConfig';
 
 const STORAGE_KEY = 'ai_sport_pilot_v1';
 
@@ -669,16 +671,6 @@ export default new PilotService();
 export { PilotService };
 
 function getExerciseName(type: TrainingTask['exerciseType']): string {
-  switch (type) {
-    case 'jump_rope':
-      return '跳绳';
-    case 'squats':
-      return '深蹲';
-    case 'sit_ups':
-      return '仰卧起坐';
-    case 'jumping_jacks':
-      return '开合跳';
-    default:
-      return type;
-  }
+  // 使用统一的 EXERCISE_NAMES 常量，避免硬编码运动名导致 DRY 违规
+  return EXERCISE_NAMES[type as ExerciseType] ?? type;
 }

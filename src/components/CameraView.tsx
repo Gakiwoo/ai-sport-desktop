@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState, memo } from 'react';
 import { Pose, ExerciseType, Keypoint } from '../types';
 import { KEYPOINT_NAMES } from '../constants/exerciseConfig';
 import PoseDetectionService from '../services/PoseDetectionService';
@@ -17,7 +17,7 @@ interface CameraViewProps {
 
 export type CameraState = 'idle' | 'loading' | 'ready' | 'error';
 
-export default function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps) {
+function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -35,6 +35,8 @@ export default function CameraView({ onPoseDetected, isActive, exerciseType }: C
   const cameraStateRef = useRef<CameraState>('idle');
   /** 防止 initCameraAndPose 被重复调用 */
   const initStartedRef = useRef(false);
+  /** 摄像头 track ended 事件处理器引用（卸载时 removeEventListener） */
+  const trackEndedHandlerRef = useRef<(() => void) | null>(null);
   // 用 ref 存回调，避免回调变化导致摄像头重建
   const onPoseDetectedRef = useRef(onPoseDetected);
   const exerciseTypeRef = useRef(exerciseType);
@@ -69,6 +71,12 @@ export default function CameraView({ onPoseDetected, isActive, exerciseType }: C
     rafRef.current = 0;
     processingRef.current = false;
     poseErrorCountRef.current = 0;
+    // 清理 track ended 事件监听器，防止内存泄漏
+    if (streamRef.current && trackEndedHandlerRef.current) {
+      const track = streamRef.current.getVideoTracks()[0];
+      track?.removeEventListener('ended', trackEndedHandlerRef.current);
+      trackEndedHandlerRef.current = null;
+    }
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
@@ -154,15 +162,16 @@ export default function CameraView({ onPoseDetected, isActive, exerciseType }: C
         `[AI Sport] 摄像头已连接: ${track.label}, 分辨率: ${track.getSettings().width}x${track.getSettings().height}`,
       );
 
-      // 摄像头物理断连监听
-      track.addEventListener('ended', () => {
+      // 摄像头物理断连监听（保存引用以便 stopCamera 时 removeEventListener）
+      trackEndedHandlerRef.current = () => {
         if (!mountedRef.current) return;
         console.warn('[AI Sport] 摄像头连接已断开');
         cameraStateRef.current = 'error';
         setCameraState('error');
         setErrorMsg('摄像头连接已断开，请重新连接后刷新页面');
         stopCamera();
-      });
+      };
+      track.addEventListener('ended', trackEndedHandlerRef.current);
 
       streamRef.current = stream;
       if (!videoRef.current) return;
@@ -432,6 +441,8 @@ export default function CameraView({ onPoseDetected, isActive, exerciseType }: C
       cancelAnimationFrame(rafRef.current);
       rafRef.current = 0;
       processingRef.current = false;
+      // 暂停视频解码，降低 GPU/CPU 占用（推理循环已停，视频流无需持续播放）
+      videoRef.current?.pause();
     }
 
     return () => {
@@ -468,3 +479,5 @@ export default function CameraView({ onPoseDetected, isActive, exerciseType }: C
     </div>
   );
 }
+
+export default memo(CameraView);
