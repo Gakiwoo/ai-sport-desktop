@@ -7,6 +7,12 @@ import { useWorkout } from '../hooks/useWorkout';
 import { playGoalReached } from '../services/SoundService';
 import './WorkoutPage.css';
 
+// 提取的子组件
+import TargetModal from '../components/workout/TargetModal';
+import StopConfirmModal from '../components/workout/StopConfirmModal';
+import ResultPanel from '../components/workout/ResultPanel';
+import NotificationBar from '../components/workout/NotificationBar';
+
 /* 运动类型白名单（从 EXERCISE_CONFIGS 派生，避免硬编码） */
 const VALID_EXERCISE_TYPES: Record<string, ExerciseType> = Object.fromEntries(
   EXERCISE_CONFIGS.map((c) => [c.type, c.type]),
@@ -41,6 +47,7 @@ export default function WorkoutPage() {
     stop,
   } = useWorkout(type);
 
+  // ── 弹窗 / 通知状态 ──
   const [currentFeedback, setCurrentFeedback] = useState<FormFeedback | null>(null);
   const [showTargetModal, setShowTargetModal] = useState(false);
   const [showStopConfirm, setShowStopConfirm] = useState(false);
@@ -49,6 +56,8 @@ export default function WorkoutPage() {
   const [inputError, setInputError] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [notifExiting, setNotifExiting] = useState(false);
+
+  // ── Refs ──
   const notifTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const notifExitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -59,9 +68,9 @@ export default function WorkoutPage() {
   stopRef.current = stop;
   const handleStartRef = useRef<() => void>(() => {});
   const handleStopClickRef = useRef<() => void>(() => {});
-  /** 反馈更新节流：每 250ms 最多更新一次（30fps→4fps），减少不必要渲染 */
   const lastFeedbackTimeRef = useRef(0);
 
+  // ── 通知管理 ──
   const showNotification = useCallback((msg: string) => {
     if (notifTimerRef.current) clearTimeout(notifTimerRef.current);
     if (notifExitTimerRef.current) {
@@ -80,7 +89,60 @@ export default function WorkoutPage() {
     }, 4000);
   }, []);
 
-  // 组件卸载清理通知定时器
+  const dismissNotification = useCallback(() => {
+    if (notifTimerRef.current) clearTimeout(notifTimerRef.current);
+    if (notifExitTimerRef.current) {
+      clearTimeout(notifExitTimerRef.current);
+      notifExitTimerRef.current = null;
+    }
+    if (!notification) return;
+    setNotifExiting(true);
+    notifExitTimerRef.current = setTimeout(() => {
+      setNotification(null);
+      setNotifExiting(false);
+      notifExitTimerRef.current = null;
+    }, 250);
+  }, [notification]);
+
+  // ── 目标设置弹窗回调 ──
+  const handleTargetConfirm = useCallback(
+    (mode: 'count' | 'timed', value: number) => {
+      if (mode === 'count') {
+        setTargetCount(value);
+      } else {
+        setTargetDuration(value);
+      }
+      setShowTargetModal(false);
+      setInputError(false);
+    },
+    [setTargetCount, setTargetDuration],
+  );
+
+  // ── 结束确认弹窗回调 ──
+  const handleStopConfirm = useCallback(async () => {
+    setShowStopConfirm(false);
+    setCurrentFeedback(null);
+    const { session, saved } = await stopRef.current();
+    if (session) {
+      if (saved) {
+        setResultSession(session);
+      } else {
+        showNotification('⚠️ 保存失败，请重试');
+      }
+    }
+  }, [showNotification]);
+
+  // ── 结果面板回调 ──
+  const handleResultDismiss = useCallback(() => setResultSession(null), []);
+  const handleResultAgain = useCallback(() => {
+    setResultSession(null);
+  }, []);
+  const handleResultHistory = useCallback(() => {
+    setResultSession(null);
+    navigate('/history');
+  }, [navigate]);
+
+  // ── 组件卸载清理 ──
   useEffect(() => {
     return () => {
       if (notifTimerRef.current) clearTimeout(notifTimerRef.current);
@@ -89,7 +151,7 @@ export default function WorkoutPage() {
     };
   }, []);
 
-  // 训练中关闭窗口拦截保护
+  // ── 训练中关闭窗口拦截保护 ──
   useEffect(() => {
     if (!isActive) return;
     const handler = (e: BeforeUnloadEvent) => {
@@ -100,7 +162,8 @@ export default function WorkoutPage() {
     return () => window.removeEventListener('beforeunload', handler);
   }, [isActive]);
 
-  // Escape 关闭弹窗 + 键盘快捷键（Space/Enter 开始/停止）
+  // ── 键盘快捷键 ──
+  const anyModalOpen = showTargetModal || showStopConfirm || !!resultSession;
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -109,12 +172,10 @@ export default function WorkoutPage() {
         else if (resultSession) setResultSession(null);
         return;
       }
-
-      // 快捷键：Space / Enter 控制开始/停止（仅在无弹窗、非输入框时生效）
       if (e.key === ' ' || e.key === 'Enter') {
         const active = document.activeElement;
         if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) return;
-        if (showTargetModal || showStopConfirm || resultSession) return;
+        if (anyModalOpen) return;
         e.preventDefault();
         if (isActive) {
           handleStopClickRef.current();
@@ -127,8 +188,7 @@ export default function WorkoutPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showTargetModal, showStopConfirm, resultSession, isActive]);
 
-  // 弹窗焦点锁定（Tab 循环在弹窗内部）
-  const anyModalOpen = showTargetModal || showStopConfirm || !!resultSession;
+  // ── 弹窗焦点锁定 ──
   useEffect(() => {
     if (!anyModalOpen) return;
     const handleTab = (e: KeyboardEvent) => {
@@ -153,7 +213,7 @@ export default function WorkoutPage() {
     return () => window.removeEventListener('keydown', handleTab);
   }, [anyModalOpen]);
 
-  // 计时器（elapsed 用于显示已用时间，使用 hook 统一的 startTime）
+  // ── 计时器 ──
   useEffect(() => {
     if (isActive && startTime) {
       setElapsed(0);
@@ -170,7 +230,7 @@ export default function WorkoutPage() {
     };
   }, [isActive, startTime]);
 
-  // 定数模式完成提示
+  // ── 定数模式完成提示 ──
   useEffect(() => {
     if (mode !== 'count') return;
     if (isActive && count > 0 && count >= targetCount && !hasShownCompletion.current) {
@@ -180,14 +240,13 @@ export default function WorkoutPage() {
     }
   }, [count, targetCount, isActive, mode, showNotification]);
 
-  // 定时模式时间到提示
+  // ── 定时模式时间到提示 ──
   useEffect(() => {
     if (mode !== 'timed') return;
     if (timeUp && !hasShownCompletion.current) {
       hasShownCompletion.current = true;
       showNotification(`⏰ 时间到！共完成 ${count} 次`);
       playGoalReached();
-      // 延迟一点展示结果面板，让用户看到通知
       if (stopResultTimerRef.current) clearTimeout(stopResultTimerRef.current);
       stopResultTimerRef.current = setTimeout(async () => {
         stopResultTimerRef.current = null;
@@ -203,10 +262,10 @@ export default function WorkoutPage() {
     if (isActive) hasShownCompletion.current = false;
   }, [isActive]);
 
+  // ── 姿态检测回调 ──
   const handlePoseDetected = useCallback(
     (pose: Pose) => {
       processFrame(pose);
-      // 节流反馈更新：每 250ms 最多一次（30fps→4fps），减少 React 渲染压力
       const now = performance.now();
       if (now - lastFeedbackTimeRef.current < 250) return;
       lastFeedbackTimeRef.current = now;
@@ -218,21 +277,7 @@ export default function WorkoutPage() {
     [processFrame, getFeedback],
   );
 
-  const dismissNotification = useCallback(() => {
-    if (notifTimerRef.current) clearTimeout(notifTimerRef.current);
-    if (notifExitTimerRef.current) {
-      clearTimeout(notifExitTimerRef.current);
-      notifExitTimerRef.current = null;
-    }
-    if (!notification) return;
-    setNotifExiting(true);
-    notifExitTimerRef.current = setTimeout(() => {
-      setNotification(null);
-      setNotifExiting(false);
-      notifExitTimerRef.current = null;
-    }, 250);
-  }, [notification]);
-
+  // ── 开始 / 停止操作 ──
   const handleStart = () => {
     setCurrentFeedback(null);
     dismissNotification();
@@ -244,33 +289,20 @@ export default function WorkoutPage() {
     if (count > 0 || mode === 'timed') {
       setShowStopConfirm(true);
     } else {
-      doStop();
+      handleStopConfirm();
     }
   };
   handleStopClickRef.current = handleStopClick;
 
-  const doStop = useCallback(async () => {
-    setShowStopConfirm(false);
-    setCurrentFeedback(null);
-    const { session, saved } = await stop();
-    if (session) {
-      if (saved) {
-        setResultSession(session);
-      } else {
-        showNotification('⚠️ 保存失败，请重试');
-      }
-    }
-  }, [stop, showNotification]);
-
-  // 定数模式的进度
-  const progress = mode === 'count' ? Math.min((count / targetCount) * 100, 100) : 0;
-  // 定时模式的倒计时剩余
-  const remaining = mode === 'timed' ? Math.max(targetDuration - elapsed, 0) : 0;
-
+  // ── 打开目标设置弹窗 ──
   const openTargetModal = () => {
     setTargetInput(mode === 'timed' ? targetDuration.toString() : targetCount.toString());
     setShowTargetModal(true);
   };
+
+  // ── 渲染辅助 ──
+  const progress = mode === 'count' ? Math.min((count / targetCount) * 100, 100) : 0;
+  const remaining = mode === 'timed' ? Math.max(targetDuration - elapsed, 0) : 0;
 
   return (
     <div className="workout-page">
@@ -350,7 +382,6 @@ export default function WorkoutPage() {
               {count}
             </div>
             <div className="counter-label">{mode === 'count' ? `/ ${targetCount} 次` : '次'}</div>
-            {/* 定数模式进度条 */}
             {mode === 'count' && (
               <>
                 <div className="progress-track">
@@ -431,196 +462,50 @@ export default function WorkoutPage() {
         </div>
       </div>
 
+      {/* 提取的子组件 */}
+
       {/* 通知条 */}
-      {notification && (
-        <div
-          className={`notification-bar${notifExiting ? ' notification-bar--exiting' : ''}`}
-          onClick={dismissNotification}
-          role="status"
-          aria-live="polite"
-        >
-          <span>{notification}</span>
-          <span className="notification-close">✕</span>
-        </div>
-      )}
+      <NotificationBar
+        message={notification}
+        exiting={notifExiting}
+        onDismiss={dismissNotification}
+      />
 
       {/* 目标设置弹窗 */}
-      {showTargetModal && (
-        <div
-          className="modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-label="设置目标"
-          onClick={() => setShowTargetModal(false)}
-        >
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-title">
-              {mode === 'count' ? '设置目标次数' : '设置目标时长（秒）'}
-            </h3>
-            <input
-              type="number"
-              className={`modal-input${inputError ? ' modal-input--invalid' : ''}`}
-              value={targetInput}
-              onChange={(e) => {
-                setTargetInput(e.target.value);
-                setInputError(false);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  const val = parseInt(targetInput, 10);
-                  if (isNaN(val) || val <= 0) {
-                    setInputError(true);
-                    return;
-                  }
-                  if (mode === 'count') {
-                    setTargetCount(val);
-                  } else {
-                    setTargetDuration(val);
-                  }
-                  setShowTargetModal(false);
-                  setInputError(false);
-                }
-              }}
-              min={mode === 'count' ? 1 : 10}
-              max={mode === 'count' ? 9999 : 3600}
-              autoFocus
-              aria-label={mode === 'count' ? '目标次数' : '目标时长（秒）'}
-              placeholder={mode === 'count' ? '输入目标次数' : '输入秒数（如 60）'}
-            />
-            <div className="modal-actions">
-              <button
-                type="button"
-                className="modal-btn modal-btn--cancel"
-                onClick={() => setShowTargetModal(false)}
-              >
-                取消
-              </button>
-              <button
-                type="button"
-                className="modal-btn modal-btn--confirm"
-                onClick={() => {
-                  const val = parseInt(targetInput, 10);
-                  if (isNaN(val) || val <= 0) {
-                    setInputError(true);
-                    return;
-                  }
-                  if (mode === 'count') {
-                    setTargetCount(val);
-                  } else {
-                    setTargetDuration(val);
-                  }
-                  setShowTargetModal(false);
-                  setInputError(false);
-                }}
-              >
-                确定
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <TargetModal
+        visible={showTargetModal}
+        mode={mode}
+        value={targetInput}
+        error={inputError}
+        onChange={setTargetInput}
+        onError={setInputError}
+        onClose={() => setShowTargetModal(false)}
+        onConfirm={handleTargetConfirm}
+      />
 
       {/* 结束训练确认弹窗 */}
-      {showStopConfirm && (
-        <div
-          className="modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-label="结束训练确认"
-          onClick={() => setShowStopConfirm(false)}
-        >
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-title">结束训练</h3>
-            <p className="modal-desc">
-              当前已完成 <strong>{count}</strong> 次，
-              {mode === 'count'
-                ? count >= targetCount
-                  ? '已达成目标！'
-                  : `距离目标还差 ${targetCount - count} 次。`
-                : `已用时 ${formatTime(elapsed)}。`}
-              确认结束本次训练？
-            </p>
-            <div className="modal-actions">
-              <button
-                type="button"
-                className="modal-btn modal-btn--cancel"
-                onClick={() => setShowStopConfirm(false)}
-              >
-                继续训练
-              </button>
-              <button
-                type="button"
-                className="modal-btn modal-btn--stop-confirm"
-                onClick={doStop}
-                disabled={isSaving}
-                autoFocus
-              >
-                {isSaving ? '保存中...' : '确认结束'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <StopConfirmModal
+        visible={showStopConfirm}
+        count={count}
+        mode={mode}
+        targetCount={targetCount}
+        elapsed={elapsed}
+        formatTime={formatTime}
+        onClose={() => setShowStopConfirm(false)}
+        onConfirm={handleStopConfirm}
+        isSaving={isSaving}
+      />
 
       {/* 训练结果摘要面板 */}
       {resultSession && (
-        <div
-          className="modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-label="训练结果"
-          onClick={() => setResultSession(null)}
-        >
-          <div className="result-panel" onClick={(e) => e.stopPropagation()}>
-            <div className="result-emoji">🎉</div>
-            <h2 className="result-title">训练完成</h2>
-            <div className="result-stats">
-              <div className="result-stat">
-                <div className="result-stat-value">{EXERCISE_NAMES[type]}</div>
-                <div className="result-stat-label">运动类型</div>
-              </div>
-              <div className="result-stat-divider" />
-              <div className="result-stat">
-                <div className="result-stat-value result-stat--accent">{resultSession.count}</div>
-                <div className="result-stat-label">完成次数</div>
-              </div>
-              <div className="result-stat-divider" />
-              <div className="result-stat">
-                <div className="result-stat-value">{resultSession.duration}s</div>
-                <div className="result-stat-label">用时</div>
-              </div>
-            </div>
-            <div className="result-mode-badge">
-              {resultSession.mode === 'timed' ? '⏰ 定时模式' : '🎯 定数模式'}
-            </div>
-            {resultSession.mode === 'count' && resultSession.count >= targetCount && (
-              <div className="result-badge">✅ 已达成目标</div>
-            )}
-            <div className="result-rate">
-              平均速率{' '}
-              {resultSession.duration > 0
-                ? ((resultSession.count / resultSession.duration) * 60).toFixed(1)
-                : '—'}{' '}
-              次/分钟
-            </div>
-            <div className="result-actions">
-              <button
-                type="button"
-                className="modal-btn modal-btn--confirm"
-                onClick={() => setResultSession(null)}
-              >
-                再来一次
-              </button>
-              <button
-                type="button"
-                className="modal-btn modal-btn--cancel"
-                onClick={() => navigate('/history')}
-              >
-                查看历史
-              </button>
-            </div>
-          </div>
-        </div>
+        <ResultPanel
+          session={resultSession}
+          exerciseType={type}
+          targetCount={targetCount}
+          onDismiss={handleResultDismiss}
+          onAgain={handleResultAgain}
+          onViewHistory={handleResultHistory}
+        />
       )}
     </div>
   );

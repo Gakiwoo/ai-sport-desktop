@@ -55,7 +55,9 @@ export function useWorkout(exerciseType: ExerciseType) {
   const savedSessionRef = useRef<WorkoutSession | null>(null);
   const savePromiseRef = useRef<Promise<StopResult> | null>(null);
   const exerciseTypeRef = useRef(exerciseType);
-  const [counter, setCounter] = useState<ExerciseCounter>(() => createCounter(exerciseType));
+  // counter 改用 ref 持有，避免 useState 导致 processFrame/getFeedback 引用抖动
+  // 切换 exerciseType 时同步重建（见下方 useEffect）
+  const counterRef = useRef<ExerciseCounter>(createCounter(exerciseType));
 
   const stopActivity = useCallback(() => {
     isActiveRef.current = false;
@@ -67,7 +69,7 @@ export function useWorkout(exerciseType: ExerciseType) {
 
     exerciseTypeRef.current = exerciseType;
     stopActivity();
-    setCounter(createCounter(exerciseType));
+    counterRef.current = createCounter(exerciseType);
     setCount(0);
     setMode('count');
     setTargetCount(DEFAULT_TARGETS[exerciseType]);
@@ -106,20 +108,24 @@ export function useWorkout(exerciseType: ExerciseType) {
   const processFrame = useCallback(
     (pose: Pose) => {
       if (!isActiveRef.current) return;
-      counter.processFrame(pose);
-      const newCount = counter.getCount();
+      counterRef.current.processFrame(pose);
+      const newCount = counterRef.current.getCount();
       if (newCount !== prevCountRef.current) {
         prevCountRef.current = newCount;
         setCount(newCount);
         playCountTick();
       }
     },
-    [counter],
+    [],
   );
 
   const start = useCallback(() => {
     if (isActiveRef.current) return; // 防止连击重入
-    counter.reset();
+    // 防护：targetDuration 必须在合理范围内 [10, 3600]
+    if (targetDuration < 10) {
+      console.warn(`[useWorkout] targetDuration ${targetDuration}s 低于下限 10s，已自动纠正`);
+    }
+    counterRef.current.reset();
     setCount(0);
     isActiveRef.current = true;
     setIsActive(true);
@@ -127,7 +133,7 @@ export function useWorkout(exerciseType: ExerciseType) {
     savedSessionRef.current = null;
     savePromiseRef.current = null;
     startTimeRef.current = Date.now();
-  }, [counter]);
+  }, []);
 
   const stop = useCallback(async (): Promise<StopResult> => {
     stopActivity();
@@ -140,7 +146,7 @@ export function useWorkout(exerciseType: ExerciseType) {
       return savePromiseRef.current;
     }
 
-    const finalCount = counter.getCount();
+    const finalCount = counterRef.current.getCount();
 
     if (finalCount === 0 && mode !== 'timed') {
       return { session: null, saved: false };
@@ -163,8 +169,6 @@ export function useWorkout(exerciseType: ExerciseType) {
       setIsSaving(true);
       try {
         await StorageService.saveWorkout(session);
-        // 防御竞态：start() 会重置 savedSessionRef 和 savePromiseRef 为 null
-        // 若两个 ref 均为 null，说明新会话已开始，不应写入旧会话
         if (savePromiseRef.current !== null) {
           savedSessionRef.current = session;
         }
@@ -174,7 +178,6 @@ export function useWorkout(exerciseType: ExerciseType) {
         return { session, saved: false };
       } finally {
         setIsSaving(false);
-        // 仅当 start() 未重置时清除（避免清除新会话的 promise）
         if (savePromiseRef.current !== null) {
           savePromiseRef.current = null;
         }
@@ -183,13 +186,13 @@ export function useWorkout(exerciseType: ExerciseType) {
 
     savePromiseRef.current = savePromise;
     return savePromise;
-  }, [counter, exerciseType, mode, stopActivity, targetDuration]);
+  }, [exerciseType, mode, stopActivity, targetDuration]);
 
   const getFeedback = useCallback(
     (pose: Pose) => {
-      return counter.getFeedback(pose);
+      return counterRef.current.getFeedback(pose);
     },
-    [counter],
+    [],
   );
 
   const switchMode = useCallback(

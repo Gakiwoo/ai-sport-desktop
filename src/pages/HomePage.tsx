@@ -18,6 +18,23 @@ export default function HomePage() {
           <button
             type="button"
             className="home-nav-btn"
+            onClick={() => navigate('/teacher')}
+            title="校园试点"
+            aria-label="校园试点"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M4 6h16M6 10h12M8 14h8M10 18h4"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+            <span>试点</span>
+          </button>
+          <button
+            type="button"
+            className="home-nav-btn"
             onClick={() => navigate('/history')}
             title="训练历史"
             aria-label="训练历史"

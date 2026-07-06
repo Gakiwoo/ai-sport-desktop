@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 const WorkoutPage = lazy(() => import('./pages/WorkoutPage'));
 const HistoryPage = lazy(() => import('./pages/HistoryPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
+const TeacherPage = lazy(() => import('./pages/TeacherPage'));
 const pageFallback = <div className="page">加载中...</div>;
 
 export default function App() {
@@ -42,6 +43,14 @@ export default function App() {
               element={
                 <Suspense fallback={pageFallback}>
                   <AnalyticsPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/teacher"
+              element={
+                <Suspense fallback={pageFallback}>
+                  <TeacherPage />
                 </Suspense>
               }
             />
