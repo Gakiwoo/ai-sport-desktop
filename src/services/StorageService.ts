@@ -2,6 +2,8 @@ import { WorkoutSession, ExerciseType } from '../types';
 import { createStorageAdapter, type IStorageAdapter } from './storage';
 
 const STORAGE_KEY = 'ai_sport_workout_history';
+// 解析失败时将原始损坏数据备份到该键，便于排查与人工修复（与 Mobile 端一致）
+const CORRUPT_BACKUP_KEY = 'ai_sport_workout_history_corrupt';
 const MAX_STORED_WORKOUTS = 500; // 从 200 提升到 500（Tauri Store 无 5MB 限制）
 
 const VALID_EXERCISE_TYPES: ExerciseType[] = [
@@ -73,7 +75,15 @@ class StorageService {
       // 过滤掉结构不完整的记录，防止数据损坏导致崩溃
       this.cache = parsed.filter(isValidSession) as WorkoutSession[];
       return [...this.cache];
-    } catch {
+    } catch (err) {
+      // 边界情况：本地存储数据损坏。备份原始负载供排查/人工修复，再降级为空白历史
+      try {
+        const raw = await this.adapter.get(STORAGE_KEY);
+        if (raw) await this.adapter.set(CORRUPT_BACKUP_KEY, raw);
+      } catch {
+        // 备份失败不应影响主流程
+      }
+      console.warn('[StorageService] 训练历史解析失败，已降级为空历史并备份原始数据:', err);
       return [];
     }
   }

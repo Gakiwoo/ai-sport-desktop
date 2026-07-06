@@ -94,7 +94,8 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
     // 清理 track ended 事件监听器，防止内存泄漏
     if (streamRef.current && trackEndedHandlerRef.current) {
       const track = streamRef.current.getVideoTracks()[0];
-      track?.removeEventListener('ended', trackEndedHandlerRef.current);
+      // 防御性调用：个别非标准 track 实现可能缺失 removeEventListener
+      track?.removeEventListener?.('ended', trackEndedHandlerRef.current);
       trackEndedHandlerRef.current = null;
     }
     streamRef.current?.getTracks().forEach((t) => t.stop());

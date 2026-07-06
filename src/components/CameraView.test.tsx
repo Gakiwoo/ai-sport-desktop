@@ -23,13 +23,14 @@ describe('CameraView initialization failures', () => {
           .mockResolvedValue([{ kind: 'videoinput', deviceId: 'camera-1', label: 'Test Camera' }]),
         getUserMedia: vi.fn().mockResolvedValue({
           getTracks: () => [{ stop: stopTrack }],
-          getVideoTracks: () => [
-            {
-              label: 'Test Camera',
-              getSettings: () => ({ width: 640, height: 480 }),
-              addEventListener: vi.fn(),
-            },
-          ],
+        getVideoTracks: () => [
+          {
+            label: 'Test Camera',
+            getSettings: () => ({ width: 640, height: 480 }),
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+          },
+        ],
         }),
       },
     });
