@@ -292,10 +292,9 @@ export class SitUpCounter extends ExerciseCounter {
     const currentHipAnkleDist = ankleY - hipY;
     const baselineHipAnkleDist = this.baselineAnkleY - this.baselineHipY;
     if (baselineHipAnkleDist > 0) {
-      // 坐标系 y 向下增大：臀部上抬 → hipY 增大 → currentHipAnkleDist 减小
-      // 因此 liftRatio 应为 (baseline - current)，上抬时为正值才能触发阈值
-      // 原公式 (current - baseline) 恒为负，导致犯规检测永不触发（已修正）
-      const liftRatio = (baselineHipAnkleDist - currentHipAnkleDist) / baselineHipAnkleDist;
+      // 坐标系 y 向下增大：臀部上抬（离垫）→ hipY 减小 → currentHipAnkleDist(=ankleY-hipY) 增大
+      // 故 liftRatio = (current - baseline)/baseline，上抬时为正值触发犯规阈值
+      const liftRatio = (currentHipAnkleDist - baselineHipAnkleDist) / baselineHipAnkleDist;
       if (liftRatio > this.HIP_LIFT_THRESHOLD) {
         this.lastFoul = 'hip_lift';
       }
