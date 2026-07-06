@@ -9,6 +9,26 @@ import { drawSkeletonOnCanvas, type Landmark } from './SkeletonRenderer';
 /** 连续 pose.send() 失败超过此阈值则判定 AI 模型断线 */
 const POSE_ERROR_THRESHOLD = 10;
 
+/** 单帧推理超时（ms）：防止 WASM 异常导致 send() 永久挂起、卡死 rAF 链 */
+const POSE_SEND_TIMEOUT_MS = 2000;
+
+/**
+ * 为 pose.send() 增加超时保护。
+ * - 推理正常完成 → Promise.race 立即 resolve，finally 中清理定时器。
+ * - 推理挂死（WASM 崩溃 / CDN 断流）→ 超时后 reject，由调用方计入断线计数。
+ * 无论胜负都在 finally 清理定时器，避免每帧泄漏 setTimeout。
+ */
+function withPoseSendTimeout<T>(sendPromise: Promise<T>, onTimeout: () => void): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      onTimeout();
+      reject(new Error('pose.send() timed out'));
+    }, POSE_SEND_TIMEOUT_MS);
+  });
+  return Promise.race([sendPromise, timeout]).finally(() => clearTimeout(timer));
+}
+
 interface CameraViewProps {
   onPoseDetected: (pose: Pose) => void;
   isActive: boolean;
@@ -382,7 +402,13 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
       ) {
         processingRef.current = true;
         try {
-          await poseRef.current.send({ image: videoRef.current });
+          await withPoseSendTimeout(
+            poseRef.current.send({ image: videoRef.current }),
+            () =>
+              console.warn(
+                `[AI Sport] pose.send 单帧推理超时（>${POSE_SEND_TIMEOUT_MS}ms），可能 WASM 挂死`,
+              ),
+          );
           // 推理成功：重置连续错误计数
           poseErrorCountRef.current = 0;
         } catch (e) {
