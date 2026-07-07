@@ -1,5 +1,6 @@
 import type { Store } from '@tauri-apps/plugin-store';
 import type { IStorageAdapter } from './IStorageAdapter';
+import ErrorReporter from '../ErrorReporter';
 
 /**
  * Tauri Store 适配器 — 用于生产桌面环境
@@ -31,10 +32,10 @@ export class TauriStoreAdapter implements IStorageAdapter {
       const { load } = await import('@tauri-apps/plugin-store');
       this.store = await load(this.storeFile, { autoSave: 100, defaults: {} });
     } catch (err) {
-      console.warn(
-        '[TauriStoreAdapter] 初始化失败，降级到 localStorage:',
-        err instanceof Error ? err.message : String(err),
-      );
+      ErrorReporter.captureWarning('TauriStore 初始化失败，降级到 localStorage', {
+        source: 'TauriStoreAdapter',
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 

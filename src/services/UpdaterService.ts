@@ -17,6 +17,8 @@
  *   if (update) { await UpdaterService.downloadAndInstall(update); }
  */
 
+import ErrorReporter from './ErrorReporter';
+
 export interface UpdateInfo {
   /** 是否有可用更新 */
   available: boolean;
@@ -69,10 +71,10 @@ class UpdaterService {
         date: update.date ?? undefined,
       };
     } catch (err) {
-      console.warn(
-        '[UpdaterService] 检查更新失败:',
-        err instanceof Error ? err.message : String(err),
-      );
+      ErrorReporter.captureWarning('检查更新失败', {
+        source: 'UpdaterService',
+        error: err instanceof Error ? err.message : String(err),
+      });
       return null;
     }
   }
@@ -121,7 +123,7 @@ class UpdaterService {
 
       return true;
     } catch (err) {
-      console.error('[UpdaterService] 更新失败:', err instanceof Error ? err.message : String(err));
+      ErrorReporter.captureError(err, { source: 'UpdaterService', step: 'downloadAndInstall' });
       return false;
     }
   }

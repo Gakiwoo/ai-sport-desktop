@@ -10,6 +10,7 @@ import { SitUpCounter } from '../services/counters/SitUpCounter';
 import StorageService from '../services/StorageService';
 import { DEFAULT_TARGETS, DEFAULT_DURATIONS } from '../constants/exerciseConfig';
 import { playCountTick } from '../services/SoundService';
+import ErrorReporter from '../services/ErrorReporter';
 
 function generateId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -174,7 +175,7 @@ export function useWorkout(exerciseType: ExerciseType) {
         }
         return { session, saved: true };
       } catch (err) {
-        console.error('保存训练记录失败:', err);
+        ErrorReporter.captureError(err, { source: 'useWorkout', action: 'saveSession' });
         return { session, saved: false };
       } finally {
         setIsSaving(false);

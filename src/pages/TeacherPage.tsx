@@ -4,6 +4,7 @@ import { EXERCISE_CONFIGS, EXERCISE_NAMES } from '../constants/exerciseConfig';
 import PilotService, { type PilotState } from '../services/PilotService';
 import type { ExerciseType, PilotHistoryFilter, ReviewStatus } from '../types';
 import './TeacherPage.css';
+import ErrorReporter from '../services/ErrorReporter';
 
 const ALL_EXERCISES: Array<{ value: ExerciseType | 'all'; label: string }> = [
   { value: 'all', label: '全部项目' },
@@ -43,6 +44,10 @@ export default function TeacherPage() {
       setImportText('');
       setMessage(`导入 ${result.imported} 条，跳过 ${result.skipped} 条重复记录`);
     } catch (err) {
+      ErrorReporter.captureWarning('教师端导入数据包失败', {
+        source: 'TeacherPage',
+        error: err instanceof Error ? err.message : '导入失败',
+      });
       setMessage(err instanceof Error ? err.message : '导入失败');
     }
   };
@@ -60,6 +65,10 @@ export default function TeacherPage() {
       setImportText(text);
       importPackageText(text);
     } catch (err) {
+      ErrorReporter.captureWarning('教师端读取数据包文件失败', {
+        source: 'TeacherPage',
+        error: err instanceof Error ? err.message : '读取文件失败',
+      });
       setMessage(err instanceof Error ? err.message : '读取文件失败');
     }
   };

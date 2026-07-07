@@ -1,5 +1,6 @@
 import { WorkoutSession, ExerciseType } from '../types';
 import { createStorageAdapter, type IStorageAdapter } from './storage';
+import ErrorReporter from './ErrorReporter';
 
 const STORAGE_KEY = 'ai_sport_workout_history';
 // 解析失败时将原始损坏数据备份到该键，便于排查与人工修复（与 Mobile 端一致）
@@ -76,7 +77,8 @@ class StorageService {
       this.cache = parsed.filter(isValidSession) as WorkoutSession[];
       return [...this.cache];
     } catch (err) {
-      // 边界情况：本地存储数据损坏。备份原始负载供排查/人工修复，再降级为空白历史
+      // 边界情况：本地存储数据损坏。上报以便监控，并备份原始负载供排查/人工修复，再降级为空白历史
+      ErrorReporter.captureError(err, { source: 'StorageService', storageKey: STORAGE_KEY });
       try {
         const raw = await this.adapter.get(STORAGE_KEY);
         if (raw) await this.adapter.set(CORRUPT_BACKUP_KEY, raw);

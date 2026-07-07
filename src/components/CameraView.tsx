@@ -5,6 +5,7 @@ import PoseDetectionService from '../services/PoseDetectionService';
 import { loadMediaPipePose } from '../services/MediaPipeLoader';
 import CameraOverlay from './CameraOverlay';
 import { drawSkeletonOnCanvas, type Landmark } from './SkeletonRenderer';
+import ErrorReporter from '../services/ErrorReporter';
 
 /** 连续 pose.send() 失败超过此阈值则判定 AI 模型断线 */
 const POSE_ERROR_THRESHOLD = 10;
@@ -49,6 +50,8 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
   const mountedRef = useRef(true);
   /** 连续 pose.send() 失败计数（超过阈值说明 CDN/WASM 断线） */
   const poseErrorCountRef = useRef(0);
+  /** 已上报"AI 模型断线"的标记，避免 rAF 热循环中重复上报监控 */
+  const aiErrorReportedRef = useRef(false);
   /** CDN 初始化超时定时器 ID（卸载时清理，防止孤儿回调） */
   const cdnTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // 用 ref 存 cameraState，避免闭包捕获旧值
@@ -143,7 +146,7 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
           selectedDeviceId = videoDevices[0].deviceId;
         }
       } catch (e) {
-        console.warn('[AI Sport] 枚举设备失败:', e);
+        ErrorReporter.captureWarning('枚举摄像头设备失败', { source: 'CameraView', error: String(e) });
       }
 
       // 2. 请求摄像头权限和流
@@ -160,15 +163,15 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
         stream = await navigator.mediaDevices.getUserMedia(constraints);
       } catch (firstErr) {
         // fallback: 不指定 deviceId，让系统自动选择
-        console.warn('[AI Sport] 首次 getUserMedia 失败，尝试 fallback:', firstErr);
+        ErrorReporter.captureWarning('getUserMedia 首次失败，尝试 fallback', { source: 'CameraView', error: String(firstErr) });
         try {
           stream = await navigator.mediaDevices.getUserMedia({
             video: { width: { ideal: 640 }, height: { ideal: 480 } },
             audio: false,
           });
-        } catch (secondErr) {
-          // 最后 fallback: 最宽松的约束
-          console.warn('[AI Sport] 第二次 getUserMedia 失败，尝试最宽松约束:', secondErr);
+      } catch (secondErr) {
+        // 最后 fallback: 最宽松的约束
+        ErrorReporter.captureWarning('getUserMedia 第二次失败，尝试最宽松约束', { source: 'CameraView', error: String(secondErr) });
           stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         }
       }
@@ -349,7 +352,7 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
         console.warn('[AI Sport] 摄像头和 AI 模型初始化完成');
       }
     } catch (err) {
-      console.error('[AI Sport] 初始化失败:', err);
+      ErrorReporter.captureError(err, { source: 'CameraView', step: 'initCameraAndPose' });
       if (!mountedRef.current) return;
       const errorMsg = err instanceof Error ? err.message : String(err);
       let userMsg: string;
@@ -412,15 +415,22 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
           );
           // 推理成功：重置连续错误计数
           poseErrorCountRef.current = 0;
+          aiErrorReportedRef.current = false; // 推理恢复，允许下次断线再次上报
         } catch (e) {
           poseErrorCountRef.current++;
           console.warn(
             `[AI Sport] pose.send error (${poseErrorCountRef.current}/${POSE_ERROR_THRESHOLD}):`,
             e,
           );
-          // 连续失败超过阈值 → AI 模型断线，显示错误提示
+          // 连续失败超过阈值 → AI 模型断线，显示错误提示并一次性上报
           if (poseErrorCountRef.current >= POSE_ERROR_THRESHOLD) {
-            console.error('[AI Sport] AI 模型推理连续失败，切换到错误状态');
+            if (!aiErrorReportedRef.current) {
+              aiErrorReportedRef.current = true;
+              ErrorReporter.captureError(
+                new Error('AI 模型推理连续失败，切换到错误状态'),
+                { source: 'CameraView', consecutiveErrors: poseErrorCountRef.current },
+              );
+            }
             cameraStateRef.current = 'error';
             setCameraState('error');
             setErrorMsg('AI 模型运行中断，请检查网络连接后重试');

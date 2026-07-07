@@ -5,6 +5,7 @@ import StorageService from '../services/StorageService';
 import { EXERCISE_NAMES, EXERCISE_COLORS, EXERCISE_CONFIGS } from '../constants/exerciseConfig';
 import ExerciseIllustration from '../components/ExerciseIllustration';
 import './HistoryPage.css';
+import ErrorReporter from '../services/ErrorReporter';
 
 /* 运动类型筛选 Tab（从 EXERCISE_CONFIGS 派生，避免硬编码） */
 const ALL_TYPES: Array<{ value: ExerciseType | 'all'; label: string }> = [
@@ -91,7 +92,7 @@ export default function HistoryPage() {
       setHistory([]);
       setShowClearModal(false);
     } catch (err) {
-      console.error('清空历史记录失败:', err);
+      ErrorReporter.captureError(err, { source: 'HistoryPage', action: 'clearHistory' });
     }
   };
 
@@ -100,7 +101,7 @@ export default function HistoryPage() {
       await StorageService.deleteWorkout(id);
       setHistory((prev) => prev.filter((h) => h.id !== id));
     } catch (err) {
-      console.error('删除记录失败:', err);
+      ErrorReporter.captureError(err, { source: 'HistoryPage', action: 'deleteRecord' });
     }
   };
 
