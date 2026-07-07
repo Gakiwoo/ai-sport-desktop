@@ -112,22 +112,30 @@ export function squatBottomPose(): Pose {
   });
 }
 
-/** 开合跳张开姿态（手臂举起 + 腿分开） */
+/**
+ * 开合跳张开姿态（手臂举起 + 腿分开）
+ *
+ * 采用 Desktop 原生几何（与 Desktop ExerciseCounters.test.ts 内部预设一致），
+ * 以匹配 JumpingJacksCounter 的相对展幅阈值：
+ *   standing 手腕X展幅（归一化髋宽）≈ 2.208 → 作为基线
+ *   open 手腕X展幅 ≈ 4.0 → 远超 openThreshold(baseline + 0.7 ≈ 2.908)
+ * 注：此前误用 Mobile 像素/480 的几何（展幅≈2.792 < 阈值）导致 Desktop 漏计。
+ */
 export function jumpingJackOpenPose(): Pose {
   return buildPose({
     nose: { x: 0.5, y: 0.1, score: 0.9 },
     left_shoulder: { x: 0.35, y: 0.25, score: 0.9 },
     right_shoulder: { x: 0.65, y: 0.25, score: 0.9 },
-    left_elbow: { x: 0.25, y: 0.1806, score: 0.9 },
-    right_elbow: { x: 0.75, y: 0.1806, score: 0.9 },
-    left_wrist: { x: 0.2208, y: 0.0806, score: 0.9 },
-    right_wrist: { x: 0.7792, y: 0.0806, score: 0.9 },
-    left_hip: { x: 0.4, y: 0.55, score: 0.9 },
-    right_hip: { x: 0.6, y: 0.55, score: 0.9 },
-    left_knee: { x: 0.35, y: 0.7194, score: 0.9 },
-    right_knee: { x: 0.65, y: 0.7194, score: 0.9 },
-    left_ankle: { x: 0.3, y: 0.9, score: 0.9 },
-    right_ankle: { x: 0.7, y: 0.9, score: 0.9 },
+    left_elbow: { x: 0.24, y: 0.14, score: 0.9 },
+    right_elbow: { x: 0.76, y: 0.14, score: 0.9 },
+    left_wrist: { x: 0.18, y: 0.05, score: 0.9 },
+    right_wrist: { x: 0.82, y: 0.05, score: 0.9 },
+    left_hip: { x: 0.42, y: 0.55, score: 0.9 },
+    right_hip: { x: 0.58, y: 0.55, score: 0.9 },
+    left_knee: { x: 0.34, y: 0.72, score: 0.9 },
+    right_knee: { x: 0.66, y: 0.72, score: 0.9 },
+    left_ankle: { x: 0.25, y: 0.9, score: 0.9 },
+    right_ankle: { x: 0.75, y: 0.9, score: 0.9 },
   });
 }
 

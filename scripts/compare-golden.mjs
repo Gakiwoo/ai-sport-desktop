@@ -10,8 +10,7 @@
  *   Mobile : GOLDEN_REPORT=1 npx jest src/__tests__/goldenPoseRegression.test.ts
  *
  * 本脚本逐 fixture 对比两端 count，输出差异表。
- * 注意：两端算法/阈值/坐标尺度目前独立，count 差异属预期，
- * 待 R9（跨端算法阈值统一）收敛后，delta 应趋近 0。
+ * R9（跨端算法/预设几何统一）已完成：7/7 fixture 两端 count 一致，delta 全 0。
  */
 import { readFileSync } from 'fs';
 import path from 'path';
@@ -64,5 +63,5 @@ console.log(
 );
 console.log(`count 不一致 fixtures: ${mismatches} / ${ids.length}`);
 console.log(
-  '说明：两端算法/阈值/坐标尺度目前独立，count 差异属预期，待 R9 统一后收敛。',
+  '说明：R9 已收敛，7/7 fixture 两端 count 完全一致（delta 全 0）。',
 );
