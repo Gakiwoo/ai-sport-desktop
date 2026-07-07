@@ -16,11 +16,23 @@ export default defineConfig(async () => ({
     rollupOptions: {
       output: {
         manualChunks(id: string) {
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) {
-            return 'vendor-react';
-          }
-          if (id.includes('node_modules/recharts')) {
-            return 'vendor-recharts';
+          if (id.includes('node_modules')) {
+            // 核心 React 运行时（react / react-dom / react-router / react-router-dom / scheduler）：
+            // 每个页面/入口都需要，独立成块便于浏览器长期缓存；用精确路径正则避免误匹配 react-is 等
+            if (
+              /[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(
+                id,
+              ) ||
+              id.includes('react-router-dom')
+            ) {
+              return 'vendor-react';
+            }
+            // 重型可视化库：仅 AnalyticsPage（已懒加载）使用，隔离避免拖慢首屏
+            if (id.includes('/recharts/') || id.includes('/d3-') || id.includes('/victory/')) {
+              return 'vendor-recharts';
+            }
+            // 其余第三方依赖统一归入 vendor，防止未来新增重型依赖污染入口 chunk
+            return 'vendor';
           }
         },
       },
