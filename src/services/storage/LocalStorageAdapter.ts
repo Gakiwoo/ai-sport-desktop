@@ -25,7 +25,14 @@ export class LocalStorageAdapter implements IStorageAdapter {
   }
 
   async keys(): Promise<string[]> {
-    return Object.keys(localStorage);
+    // 使用标准 Storage 枚举 API（length + key(i)），而非 Object.keys —— 后者依赖
+    // 浏览器对 localStorage 的魔法自有属性行为，在 polyfill/mock 环境下不可靠
+    const result: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) result.push(key);
+    }
+    return result;
   }
 
   async clear(): Promise<void> {
