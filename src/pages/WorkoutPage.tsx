@@ -31,6 +31,7 @@ export default function WorkoutPage() {
 
   const {
     isActive,
+    isPaused,
     count,
     mode,
     switchMode,
@@ -45,6 +46,9 @@ export default function WorkoutPage() {
     getFeedback,
     start,
     stop,
+    pause,
+    resume,
+    getElapsedSeconds,
   } = useWorkout(type);
 
   // ── 弹窗 / 通知状态 ──
@@ -213,12 +217,12 @@ export default function WorkoutPage() {
     return () => window.removeEventListener('keydown', handleTab);
   }, [anyModalOpen]);
 
-  // ── 计时器 ──
+  // ── 计时器（自动扣除暂停时长） ──
   useEffect(() => {
     if (isActive && startTime) {
       setElapsed(0);
       timerRef.current = setInterval(() => {
-        setElapsed(Math.round((Date.now() - startTime) / 1000));
+        setElapsed(getElapsedSeconds());
       }, 1000);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -228,7 +232,7 @@ export default function WorkoutPage() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isActive, startTime]);
+  }, [isActive, startTime, getElapsedSeconds]);
 
   // ── 定数模式完成提示 ──
   useEffect(() => {
@@ -416,9 +420,17 @@ export default function WorkoutPage() {
 
           {/* 状态指示 */}
           <div className="status-indicator">
-            <span className={`status-dot ${isActive ? 'status-dot--active' : ''}`} />
-            <span className={`status-text ${isActive ? 'status-text--active' : ''}`}>
-              {isActive ? '姿态正常' : '待开始'}
+            <span
+              className={`status-dot ${
+                isPaused ? 'status-dot--paused' : isActive ? 'status-dot--active' : ''
+              }`}
+            />
+            <span
+              className={`status-text ${
+                isPaused ? 'status-text--paused' : isActive ? 'status-text--active' : ''
+              }`}
+            >
+              {isPaused ? '已暂停' : isActive ? '姿态正常' : '待开始'}
             </span>
           </div>
 
@@ -443,15 +455,33 @@ export default function WorkoutPage() {
                 <span>开始训练</span>
               </button>
             ) : (
-              <button
-                type="button"
-                className="action-btn action-btn--stop"
-                onClick={handleStopClick}
-                disabled={isSaving || timeUp}
-              >
-                {isSaving ? <div className="mini-spinner" /> : <div className="stop-icon" />}
-                <span>{timeUp ? '保存中...' : '结束训练'}</span>
-              </button>
+              <>
+                <button
+                  type="button"
+                  className="action-btn action-btn--pause"
+                  onClick={isPaused ? resume : pause}
+                  disabled={isSaving || timeUp}
+                  aria-label={isPaused ? '继续训练' : '暂停训练'}
+                >
+                  {isPaused ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                      <polygon points="7,4 20,12 7,20" />
+                    </svg>
+                  ) : (
+                    <span className="pause-icon" />
+                  )}
+                  <span>{isPaused ? '继续训练' : '暂停训练'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="action-btn action-btn--stop"
+                  onClick={handleStopClick}
+                  disabled={isSaving || timeUp}
+                >
+                  {isSaving ? <div className="mini-spinner" /> : <div className="stop-icon" />}
+                  <span>{timeUp ? '保存中...' : '结束训练'}</span>
+                </button>
+              </>
             )}
           </div>
         </aside>

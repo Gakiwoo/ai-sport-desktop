@@ -260,6 +260,11 @@
   box-shadow: 0 0 8px rgba(52, 199, 89, 0.5);
 }
 
+.status-dot--paused {
+  background: #ff9f0a;
+  box-shadow: 0 0 8px rgba(255, 159, 10, 0.5);
+}
+
 .status-text {
   font-size: 14px;
   font-weight: 600;
@@ -269,6 +274,10 @@
 
 .status-text--active {
   color: #34c759;
+}
+
+.status-text--paused {
+  color: #ff9f0a;
 }
 
 /* 姿态反馈 */
@@ -358,6 +367,15 @@
   box-shadow: 0 6px 24px rgba(255, 59, 48, 0.5);
 }
 
+.action-btn--pause {
+  background: linear-gradient(135deg, #ff9f0a, #ff9500);
+  color: white;
+  box-shadow: 0 4px 16px rgba(255, 159, 10, 0.35);
+}
+.action-btn--pause:hover {
+  box-shadow: 0 6px 24px rgba(255, 159, 10, 0.5);
+}
+
 .stop-icon {
   width: 20px;
   height: 20px;
@@ -372,6 +390,28 @@
   border-top-color: white;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
+}
+
+.pause-icon {
+  position: relative;
+  width: 16px;
+  height: 18px;
+}
+.pause-icon::before,
+.pause-icon::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 5px;
+  height: 18px;
+  background: white;
+  border-radius: 2px;
+}
+.pause-icon::before {
+  left: 0;
+}
+.pause-icon::after {
+  right: 0;
 }
 
 @keyframes spin {

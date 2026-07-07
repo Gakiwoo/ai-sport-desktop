@@ -60,6 +60,24 @@ export function useWorkout(exerciseType: ExerciseType) {
   // 切换 exerciseType 时同步重建（见下方 useEffect）
   const counterRef = useRef<ExerciseCounter>(createCounter(exerciseType));
 
+  // ── 暂停/恢复状态 ──
+  const [isPaused, setIsPaused] = useState(false);
+  const isPausedRef = useRef(false);
+  // 累计已暂停毫秒数（每次 resume 累加）
+  const pausedAccumRef = useRef(0);
+  // 当前这次暂停的起点（null 表示未暂停）
+  const pauseStartRef = useRef<number | null>(null);
+
+  /** 有效训练时长（ms），自动扣除暂停区间 */
+  const getElapsedMs = useCallback(() => {
+    if (!startTimeRef.current) return 0;
+    let paused = pausedAccumRef.current;
+    if (pauseStartRef.current) paused += Date.now() - pauseStartRef.current;
+    return Date.now() - startTimeRef.current - paused;
+  }, []);
+
+  const getElapsedSeconds = useCallback(() => Math.round(getElapsedMs() / 1000), [getElapsedMs]);
+
   const stopActivity = useCallback(() => {
     isActiveRef.current = false;
     setIsActive(false);
@@ -81,6 +99,11 @@ export function useWorkout(exerciseType: ExerciseType) {
     prevCountRef.current = 0;
     savedSessionRef.current = null;
     savePromiseRef.current = null;
+    // 重置暂停态
+    setIsPaused(false);
+    isPausedRef.current = false;
+    pauseStartRef.current = null;
+    pausedAccumRef.current = 0;
   }, [exerciseType, stopActivity]);
 
   useEffect(() => {
@@ -90,15 +113,15 @@ export function useWorkout(exerciseType: ExerciseType) {
     setTimeUp(false);
 
     const timer = setInterval(() => {
-      if (!startTimeRef.current) return;
-      const elapsed = Math.round((Date.now() - startTimeRef.current) / 1000);
+      if (!startTimeRef.current || isPausedRef.current) return;
+      const elapsed = Math.round(getElapsedMs() / 1000);
       if (elapsed >= targetDuration) {
         setTimeUp(true);
       }
     }, 200);
 
     return () => clearInterval(timer);
-  }, [isActive, mode, targetDuration]);
+  }, [isActive, mode, targetDuration, getElapsedMs]);
 
   useEffect(() => {
     if (timeUp && isActive && mode === 'timed') {
@@ -108,7 +131,7 @@ export function useWorkout(exerciseType: ExerciseType) {
 
   const processFrame = useCallback(
     (pose: Pose) => {
-      if (!isActiveRef.current) return;
+      if (!isActiveRef.current || isPausedRef.current) return;
       counterRef.current.processFrame(pose);
       const newCount = counterRef.current.getCount();
       if (newCount !== prevCountRef.current) {
@@ -134,6 +157,11 @@ export function useWorkout(exerciseType: ExerciseType) {
     savedSessionRef.current = null;
     savePromiseRef.current = null;
     startTimeRef.current = Date.now();
+    // 重置暂停态，确保每次开始都是干净会话
+    isPausedRef.current = false;
+    pauseStartRef.current = null;
+    pausedAccumRef.current = 0;
+    setIsPaused(false);
   }, []);
 
   const stop = useCallback(async (): Promise<StopResult> => {
@@ -154,8 +182,14 @@ export function useWorkout(exerciseType: ExerciseType) {
     }
 
     const duration = startTimeRef.current
-      ? Math.round((Date.now() - startTimeRef.current) / 1000)
+      ? Math.round(getElapsedMs() / 1000)
       : targetDuration;
+
+    // 计算完时长后再清理暂停态，避免影响时长统计
+    isPausedRef.current = false;
+    pauseStartRef.current = null;
+    pausedAccumRef.current = 0;
+    setIsPaused(false);
 
     const session: WorkoutSession = {
       id: generateId(),
@@ -189,6 +223,23 @@ export function useWorkout(exerciseType: ExerciseType) {
     return savePromise;
   }, [exerciseType, mode, stopActivity, targetDuration]);
 
+  const pause = useCallback(() => {
+    if (!isActiveRef.current || isPausedRef.current) return;
+    isPausedRef.current = true;
+    pauseStartRef.current = Date.now();
+    setIsPaused(true);
+  }, []);
+
+  const resume = useCallback(() => {
+    if (!isActiveRef.current || !isPausedRef.current) return;
+    if (pauseStartRef.current) {
+      pausedAccumRef.current += Date.now() - pauseStartRef.current;
+      pauseStartRef.current = null;
+    }
+    isPausedRef.current = false;
+    setIsPaused(false);
+  }, []);
+
   const getFeedback = useCallback(
     (pose: Pose) => {
       return counterRef.current.getFeedback(pose);
@@ -214,11 +265,15 @@ export function useWorkout(exerciseType: ExerciseType) {
     setTargetDuration,
     isSaving,
     timeUp,
+    isPaused,
     startTime: startTimeRef.current,
     processFrame,
     getFeedback,
     start,
     stop,
+    pause,
+    resume,
+    getElapsedSeconds,
     switchMode,
   };
 }

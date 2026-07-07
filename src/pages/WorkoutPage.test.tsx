@@ -45,11 +45,15 @@ describe('WorkoutPage', () => {
       setTargetDuration: vi.fn(),
       isSaving: false,
       timeUp: true,
+      isPaused: false,
       startTime: null,
       processFrame: vi.fn(),
       getFeedback: vi.fn(),
       start: vi.fn(),
       stop: stopMock,
+      pause: vi.fn(),
+      resume: vi.fn(),
+      getElapsedSeconds: vi.fn(() => 0),
       switchMode: vi.fn(),
     });
   });
@@ -84,11 +88,15 @@ describe('WorkoutPage', () => {
       setTargetDuration: vi.fn(),
       isSaving: false,
       timeUp: false,
+      isPaused: false,
       startTime: null,
       processFrame: vi.fn(),
       getFeedback: vi.fn(),
       start: vi.fn(),
       stop: stopMock,
+      pause: vi.fn(),
+      resume: vi.fn(),
+      getElapsedSeconds: vi.fn(() => 0),
       switchMode: vi.fn(),
     });
 
