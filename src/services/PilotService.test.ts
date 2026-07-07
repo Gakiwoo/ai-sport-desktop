@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { PilotService } from './PilotService';
-import type { PilotDataPackage, PilotHistoryFilter } from '../types';
+import type {
+  ExerciseSessionRecord,
+  PilotDataPackage,
+  PilotHistoryFilter,
+  TrainingTask,
+} from '../types';
 
 function dataPackage(): PilotDataPackage {
   return {
@@ -106,9 +111,46 @@ describe('PilotService', () => {
 
     const csv = service.exportCsv(state, state.sessions);
 
-    expect(csv).toContain('学生,班级,任务,项目,成绩,用时');
+    expect(csv).toContain('学生,班级,任务,项目,成绩,评级,达标,动作质量,综合分,用时');
     expect(csv).toContain('学生 A');
+    // 数据包任务无 targetCount → 完成比例 null → 评级待提升/未达标
+    expect(csv).toContain('待提升');
+    expect(csv).toContain('未达标');
     expect(csv).toContain('mobile-pose-v1');
+  });
+
+  it('scoreSessionRecord 按任务目标评级（60 次目标，实测 60 → 良好达标）', () => {
+    const service = new PilotService();
+    const session: ExerciseSessionRecord = {
+      id: 's',
+      exerciseType: 'jump_rope',
+      startedAt: '2026-07-01T08:00:00.000Z',
+      endedAt: '2026-07-01T08:00:45.000Z',
+      durationSec: 45,
+      score: 60,
+      scoreUnit: 'reps',
+      validCount: 60,
+      invalidCount: 0,
+      foulCount: 0,
+      confidence: 1,
+      algorithmVersion: 'mobile-pose-v1',
+    };
+    const task: TrainingTask = {
+      id: 'task-jump_rope',
+      schoolId: 'school-demo',
+      classId: 'class-demo-1',
+      name: '跳绳',
+      exerciseType: 'jump_rope',
+      targetCount: 60,
+      officialScoring: true,
+    };
+
+    const result = service.scoreSessionRecord(session, task);
+    expect(result.rating).toBe('good');
+    expect(result.passed).toBe(true);
+    expect(result.ratingLabel).toBe('良好');
+    expect(result.qualityScore).toBe(100);
+    expect(result.compositeScore).toBe(60);
   });
 
   it('exports teacher score fields to a real xlsx workbook', () => {

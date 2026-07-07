@@ -452,6 +452,8 @@ export default function TeacherPage() {
                 <th>任务</th>
                 <th>项目</th>
                 <th>成绩</th>
+                <th>评级</th>
+                <th>综合分</th>
                 <th>有效/无效/犯规</th>
                 <th>置信度</th>
                 <th>设备</th>
@@ -474,6 +476,20 @@ export default function TeacherPage() {
                       <strong>{review?.overrideScore ?? session.score}</strong>
                       {session.scoreUnit}
                       <small>{session.durationSec}s</small>
+                    </td>
+                    <td>
+                      {(() => {
+                        const scoring = PilotService.scoreSessionRecord(session, task);
+                        return (
+                          <span className={`rating-badge rating-badge--${scoring.rating}`}>
+                            {scoring.ratingLabel}
+                            {!scoring.passed && <small> · 未达标</small>}
+                          </span>
+                        );
+                      })()}
+                    </td>
+                    <td>
+                      <strong>{PilotService.scoreSessionRecord(session, task).compositeScore}</strong>
                     </td>
                     <td>
                       {session.validCount}/{session.invalidCount}/{session.foulCount}
@@ -516,7 +532,7 @@ export default function TeacherPage() {
               })}
               {filteredSessions.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="teacher-empty">
+                  <td colSpan={11} className="teacher-empty">
                     暂无成绩，先导入移动端 pilot-v1 数据包
                   </td>
                 </tr>

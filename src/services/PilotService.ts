@@ -20,6 +20,7 @@ import {
   escapeCsv,
   toBlobPart,
 } from '../utils/xlsx';
+import { scoreSession, type ScoringResult } from './scoring';
 
 const STORAGE_KEY = 'ai_sport_pilot_v1';
 
@@ -363,6 +364,20 @@ class PilotService {
     URL.revokeObjectURL(url);
   }
 
+  /** 根据成绩记录与（可选）任务目标计算评分结果 */
+  scoreSessionRecord(session: ExerciseSessionRecord, task?: TrainingTask): ScoringResult {
+    return scoreSession({
+      exerciseType: session.exerciseType,
+      score: session.score,
+      scoreUnit: session.scoreUnit,
+      validCount: session.validCount,
+      invalidCount: session.invalidCount,
+      foulCount: session.foulCount,
+      confidence: session.confidence,
+      targetCount: task?.targetCount,
+    });
+  }
+
   private buildScoreRows(state: PilotState, sessions: ExerciseSessionRecord[]): SpreadsheetRow[] {
     const headers: SpreadsheetRow = [
       '学生',
@@ -370,6 +385,10 @@ class PilotService {
       '任务',
       '项目',
       '成绩',
+      '评级',
+      '达标',
+      '动作质量',
+      '综合分',
       '用时',
       '有效',
       '无效',
@@ -386,12 +405,17 @@ class PilotService {
       const classroom = state.classes.find((item) => item.id === session.classId);
       const task = state.tasks.find((item) => item.id === session.taskId);
       const review = state.reviews.find((item) => item.sessionRecordId === session.id);
+      const scoring = this.scoreSessionRecord(session, task);
       return [
         student?.name || session.studentId || '',
         classroom?.name || session.classId || '',
         task?.name || session.taskId || '',
         session.exerciseType,
         `${review?.overrideScore ?? session.score}${session.scoreUnit}`,
+        scoring.ratingLabel,
+        scoring.passed ? '达标' : '未达标',
+        scoring.qualityLabel,
+        scoring.compositeScore,
         session.durationSec,
         session.validCount,
         session.invalidCount,

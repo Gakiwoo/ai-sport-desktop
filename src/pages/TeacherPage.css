@@ -273,6 +273,36 @@
   background: #f9fafb;
 }
 
+.rating-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.rating-badge--excellent {
+  background: #34c759;
+}
+
+.rating-badge--good {
+  background: #007aff;
+}
+
+.rating-badge--pass {
+  background: #ff9500;
+}
+
+.rating-badge--weak {
+  background: #ff3b30;
+}
+
+.rating-badge small {
+  font-weight: 500;
+  opacity: 0.85;
+}
+
 .teacher-review-cell {
   display: grid;
   grid-template-columns: 120px minmax(160px, 1fr) 64px;
