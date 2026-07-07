@@ -16,6 +16,21 @@ export abstract class ExerciseCounter {
     return this.count;
   }
 
+  /**
+   * 获取当前动作阶段。Desktop 计数器目前未在 processFrame 中上报阶段，
+   * 默认返回基类初值；golden runner 在 Desktop 侧对 phase 断言做兼容跳过。
+   * 与 Mobile 基类接口对齐，便于跨端 golden 框架复用。
+   */
+  getPhase(): string {
+    return this.lastState;
+  }
+
+  /**
+   * 设置实际帧间隔（ms）。Desktop 计数器基于帧计数驱动，不依赖真实帧间隔，
+   * 此处仅保留接口以对齐 Mobile golden runner；子类可重写以影响速率计算。
+   */
+  setFrameInterval(_ms: number): void {}
+
   reset(): void {
     this.count = 0;
     this.lastState = 'neutral';
