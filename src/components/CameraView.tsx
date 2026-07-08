@@ -6,12 +6,13 @@ import { loadMediaPipePose } from '../services/MediaPipeLoader';
 import CameraOverlay from './CameraOverlay';
 import { drawSkeletonOnCanvas, type Landmark } from './SkeletonRenderer';
 import ErrorReporter from '../services/ErrorReporter';
+import { performanceMonitor } from '../services/PerformanceMonitor';
 
 /** 连续 pose.send() 失败超过此阈值则判定 AI 模型断线 */
 const POSE_ERROR_THRESHOLD = 10;
 
-/** 单帧推理超时（ms）：防止 WASM 异常导致 send() 永久挂起、卡死 rAF 链 */
-const POSE_SEND_TIMEOUT_MS = 2000;
+/** 单帧推理超时（ms）：实际推理 25-40ms，500ms 已有 >10x 余量，够快恢复 */
+const POSE_SEND_TIMEOUT_MS = 500;
 
 /**
  * 为 pose.send() 增加超时保护。
@@ -404,7 +405,14 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
         videoRef.current.readyState >= 2 &&
         cameraStateRef.current === 'ready' // 只有模型就绪才发送
       ) {
+        // 自适应跳帧：慢设备隔帧处理，减少 WASM 推理压力
+        if (!performanceMonitor.shouldProcessFrame()) {
+          rafRef.current = requestAnimationFrame(loop);
+          return;
+        }
+
         processingRef.current = true;
+        const frameStart = performance.now();
         try {
           await withPoseSendTimeout(
             poseRef.current.send({ image: videoRef.current }),
@@ -413,6 +421,9 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
                 `[AI Sport] pose.send 单帧推理超时（>${POSE_SEND_TIMEOUT_MS}ms），可能 WASM 挂死`,
               ),
           );
+          // 记录推理耗时，用于设备性能分级
+          const elapsed = performance.now() - frameStart;
+          performanceMonitor.recordFrame(elapsed);
           // 推理成功：重置连续错误计数
           poseErrorCountRef.current = 0;
           aiErrorReportedRef.current = false; // 推理恢复，允许下次断线再次上报

@@ -5,6 +5,14 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#007AFF" />
+    <!-- CDN 预连接：首次加载时节省 DNS+TCP+TLS 往返（~100-300ms） -->
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+    <link rel="dns-prefetch" href="https://unpkg.com" />
+    <link rel="dns-prefetch" href="https://registry.npmmirror.com" />
+    <link rel="dns-prefetch" href="https://gakiwoo.com" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="preconnect" href="https://unpkg.com" crossorigin />
+    <link rel="preconnect" href="https://registry.npmmirror.com" crossorigin />
     <title>AI运动助手</title>
   </head>
   <body>

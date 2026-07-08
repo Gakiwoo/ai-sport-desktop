@@ -21,6 +21,8 @@ import {
   toBlobPart,
 } from '../utils/xlsx';
 import { scoreSession, type ScoringResult } from './scoring';
+import { createStorageAdapter } from './storage/createStorageAdapter';
+import type { IStorageAdapter } from './storage/IStorageAdapter';
 
 const STORAGE_KEY = 'ai_sport_pilot_v1';
 
@@ -52,18 +54,50 @@ const officialTaskTypes: Array<TrainingTask['exerciseType']> = [
 ];
 
 class PilotService {
+  private storage: IStorageAdapter;
+
+  constructor(storage?: IStorageAdapter) {
+    this.storage = storage ?? createStorageAdapter();
+  }
+
+  /** 同步读取（兼容旧代码；生产环境请用 loadAsync） */
   load(): PilotState {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return emptyState;
     try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return emptyState;
       return { ...emptyState, ...(JSON.parse(raw) as PilotState) };
     } catch {
       return emptyState;
     }
   }
 
+  /** 异步读取（通过 IStorageAdapter，Tauri 环境下使用 Tauri Store） */
+  async loadAsync(): Promise<PilotState> {
+    try {
+      const raw = await this.storage.get(STORAGE_KEY);
+      if (!raw) return emptyState;
+      return { ...emptyState, ...(JSON.parse(raw) as PilotState) };
+    } catch {
+      return emptyState;
+    }
+  }
+
+  /** 同步保存（兼容旧代码；生产环境请用 saveAsync） */
   save(state: PilotState): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      // 存储满时静默降级
+    }
+  }
+
+  /** 异步保存（通过 IStorageAdapter，Tauri 环境下使用 Tauri Store） */
+  async saveAsync(state: PilotState): Promise<void> {
+    try {
+      await this.storage.set(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      // 存储满时静默降级
+    }
   }
 
   upsertClassroom(

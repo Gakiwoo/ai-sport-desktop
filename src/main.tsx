@@ -8,6 +8,19 @@ import './styles/global.css';
 // 放在 main.tsx 而非 App.tsx 模块顶层，避免测试 import App 时触发全局副作用
 ErrorReporter.init({ appVersion: '1.0.0' });
 
+// 注册 Service Worker（缓存 MediaPipe 模型文件，实现离线可用 + 秒级二次加载）
+// fire-and-forget：不阻塞 App 启动
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker
+    .register('/sw.js', { scope: '/' })
+    .then((reg) => {
+      console.log('[SW] Service Worker 已注册，scope:', reg.scope);
+    })
+    .catch((err) => {
+      console.warn('[SW] Service Worker 注册失败（非关键，App 仍可正常工作）:', err);
+    });
+}
+
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <App />

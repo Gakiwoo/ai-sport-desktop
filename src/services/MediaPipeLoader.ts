@@ -14,8 +14,16 @@ const DEFAULT_CDN_URLS = [
 
 /**
  * CDN 脚本的 Subresource Integrity (SRI) 哈希值
- * 仅对已知版本设置；自定义 CDN 若无法获取哈希则留空（跳过校验）
- * 更新 MediaPipe 版本时需同步更新哈希值
+ *
+ * ⚠️ SRI 哈希是 URL 特定的——每个 CDN 提供的文件可能不同（构建时间戳、换行符等）。
+ *    当前三个公共 CDN 共用同一哈希值，这在大多数情况下有效（同版本的 MediaPipe
+ *    在各 CDN 上内容一致），但如果任一 CDN 返回不同字节流，浏览器将静默拒绝该脚本。
+ *
+ *    验证方法：
+ *    curl -s <URL> | openssl dgst -sha384 -binary | openssl base64 -A
+ *    echo "sha384-$(curl -s <URL> | openssl dgst -sha384 -binary | openssl base64 -A)"
+ *
+ * 更新 MediaPipe 版本时需为每个 CDN 独立计算并更新哈希值。
  */
 const DEFAULT_SRI_HASHES: Record<string, string> = {
   'https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js':
