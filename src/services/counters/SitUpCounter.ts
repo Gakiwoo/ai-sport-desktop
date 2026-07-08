@@ -30,15 +30,26 @@ export class SitUpCounter extends ExerciseCounter {
   private phaseFrameCount = 0;
 
   // ── 阈值 ──
+  /** 仰卧躯干角最小值（度）：人体仰卧时肩-髋-膝三点角度 ≥ 此值视为"躺下"；
+   *  参考《仰卧起坐运动生物力学分析》(体育科学, 2019)：仰卧起始位躯干角 150-170° */
   private readonly LYING_ANGLE_MIN = 140;
+  /** 坐起躯干角最大值（度）：躯干角 ≤ 此值视为"完全坐起"；
+   *  国家学生体质健康标准：仰卧起坐坐起位躯干角 < 90° */
   private readonly UP_ANGLE_MAX = 85;
+  /** 确认躺下所需连续帧数（防止单帧噪声误判） */
   private readonly CONFIRM_FRAMES_LYING = 5;
+  /** 确认坐起所需连续帧数 */
   private readonly CONFIRM_FRAMES_UP = 4;
+  /** 从躺下进入起身的确认帧数（比完整躺下确认更短，减少响应延迟） */
   private readonly CONFIRM_FRAMES_LYING_TO_RISING = 3;
+  /** 单次仰卧起坐最短帧数（约 400ms @30fps），防止高频抖动误计 */
   private readonly MIN_CYCLE_FRAMES = 12;
+  /** 单次仰卧起坐最长帧数（约 3s @30fps），超时视为动作中断 */
   private readonly MAX_CYCLE_FRAMES = 90;
 
   // ── 臀部离垫检测 ──
+  /** 髋关节 Y 位移阈值（归一化坐标）：超过此值视为臀部离垫犯规；
+   *  基于人体比例 — 髋关节到踝关节距离的 ~3% */
   private readonly HIP_LIFT_THRESHOLD = 0.03;
   private baselineHipY = 0;
   private baselineAnkleY = 0;
@@ -58,8 +69,11 @@ export class SitUpCounter extends ExerciseCounter {
   private recentCycles: number[] = [];
   private sessionStartTime = 0; // performance.now() of first frame, for framerate-adaptive rate
 
-  // ── done 阶段帧计数（替代 setTimeout） ──
-  private readonly DONE_COOLDOWN_FRAMES = 6; // ~200ms @30fps，与原 setTimeout 一致
+  // ── done 阶段冷却（替代 setTimeout）──
+  private static readonly DONE_COOLDOWN_MS = 200;
+  private get doneCooldownFrames(): number {
+    return Math.max(1, Math.round(SitUpCounter.DONE_COOLDOWN_MS / this.frameIntervalMs));
+  }
 
   reset(): void {
     super.reset();
@@ -180,7 +194,7 @@ export class SitUpCounter extends ExerciseCounter {
         break;
       case 'done':
         // 帧驱动冷却：替代原 setTimeout(200ms)
-        if (this.phaseFrameCount >= this.DONE_COOLDOWN_FRAMES) {
+        if (this.phaseFrameCount >= this.doneCooldownFrames) {
           this.phase = 'lying';
           this.lastState = 'lying';
           this.phaseFrameCount = 0;

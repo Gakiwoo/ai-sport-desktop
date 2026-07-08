@@ -179,6 +179,12 @@ scripts/                      # 辅助脚本
 - ✅ TypeScript strict 模式全程开启
 - ✅ 完善的单元测试覆盖（核心逻辑 + 算法 + 组件）
 - ✅ 跨平台构建：Windows (.msi/.exe) + macOS (.dmg)
+- ✅ **自适应设备性能分级**：实测推理耗时，三档（high/balanced/constrained）自动跳帧
+- ✅ **Service Worker 离线缓存**：11.6MB 模型文件 SW 缓存，二次加载秒开
+- ✅ **CDN 预连接优化**：dns-prefetch + preconnect 到 4 个 CDN 源
+- ✅ **推理超时保护**：pose.send() 500ms 超时（原 2s），实际推理 25-40ms
+- ✅ **自建 CDN**：`gakiwoo.com/static/mediapipe/pose/` 提供 24MB 模型文件（含 lite + full）
+- ✅ **帧间隔自适应**：ExerciseCounter 基类支持 frameIntervalMs，适配不同帧率设备
 
 ## macOS 构建注意事项
 

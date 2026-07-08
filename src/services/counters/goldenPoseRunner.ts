@@ -67,7 +67,7 @@ export interface GoldenPoseRunResult {
 
 export function runGoldenPoseFixture(fixture: GoldenPoseFixture): GoldenPoseRunResult {
   const counter = createCounterForExercise(fixture.exerciseType);
-  // Desktop 基类 setFrameInterval 为兼容 no-op；计数器基于帧计数驱动
+  // 设置帧间隔：计数器根据此值将帧计数阈值转换为真实时间阈值
   counter.setFrameInterval(fixture.frameIntervalMs);
 
   for (const step of fixture.steps) {

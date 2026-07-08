@@ -239,8 +239,8 @@ class ErrorReporter {
         }),
       });
     } catch {
-      // 远程上报失败，将错误放回队列下次重试
-      this.reportQueue.unshift(...batch.slice(0, 3)); // 最多重试 3 条
+      // LOW-4: 远程上报失败，保留完整批次以便下次重试（而非仅保留 3 条导致大部分日志丢失）
+      this.reportQueue.unshift(...batch);
     }
   }
 

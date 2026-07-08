@@ -23,6 +23,7 @@ import {
 import { scoreSession, type ScoringResult } from './scoring';
 import { createStorageAdapter } from './storage/createStorageAdapter';
 import type { IStorageAdapter } from './storage/IStorageAdapter';
+import ErrorReporter from './ErrorReporter';
 
 const STORAGE_KEY = 'ai_sport_pilot_v1';
 
@@ -55,18 +56,33 @@ const officialTaskTypes: Array<TrainingTask['exerciseType']> = [
 
 class PilotService {
   private storage: IStorageAdapter;
+  /** 最近一次通过适配器加载的缓存状态，供 load() 同步返回（MED-4 双路径桥接） */
+  private syncCache: PilotState = emptyState;
+  private cacheTimestamp = 0;
+  /** 缓存有效期（ms）：同步 load() 在此时间内直接返回缓存，避免 localStorage 与适配器数据不一致 */
+  private static readonly CACHE_TTL_MS = 2000;
 
   constructor(storage?: IStorageAdapter) {
     this.storage = storage ?? createStorageAdapter();
   }
 
-  /** 同步读取（兼容旧代码；生产环境请用 loadAsync） */
+  /** 同步读取（兼容旧代码；优先返回异步缓存，降级到 localStorage） */
   load(): PilotState {
+    // 如果有新鲜异步缓存，直接返回（确保 Tauri 环境数据一致）
+    if (Date.now() - this.cacheTimestamp < PilotService.CACHE_TTL_MS) {
+      return this.syncCache;
+    }
+    // 降级：无缓存时读 localStorage（仅 web 环境有效）
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return emptyState;
       return { ...emptyState, ...(JSON.parse(raw) as PilotState) };
-    } catch {
+    } catch (err) {
+      ErrorReporter.captureError(err, {
+        source: 'PilotService',
+        action: 'load',
+        storageKey: STORAGE_KEY,
+      });
       return emptyState;
     }
   }
@@ -75,28 +91,57 @@ class PilotService {
   async loadAsync(): Promise<PilotState> {
     try {
       const raw = await this.storage.get(STORAGE_KEY);
-      if (!raw) return emptyState;
-      return { ...emptyState, ...(JSON.parse(raw) as PilotState) };
-    } catch {
+      if (!raw) {
+        this.syncCache = emptyState;
+        this.cacheTimestamp = Date.now();
+        return emptyState;
+      }
+      this.syncCache = { ...emptyState, ...(JSON.parse(raw) as PilotState) };
+      this.cacheTimestamp = Date.now();
+      return this.syncCache;
+    } catch (err) {
+      ErrorReporter.captureError(err, {
+        source: 'PilotService',
+        action: 'loadAsync',
+        storageKey: STORAGE_KEY,
+      });
       return emptyState;
     }
   }
 
-  /** 同步保存（兼容旧代码；生产环境请用 saveAsync） */
+  /** 同步保存（兼容旧代码；同时写 localStorage 和适配器，确保双路径一致） */
   save(state: PilotState): void {
+    // 更新同步缓存
+    this.syncCache = state;
+    this.cacheTimestamp = Date.now();
+    // 同步写入 localStorage（兼容 load() 降级路径）
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      // 存储满时静默降级
+    } catch (err) {
+      ErrorReporter.captureError(err, {
+        source: 'PilotService',
+        action: 'save',
+        storageKey: STORAGE_KEY,
+        dataSize: JSON.stringify(state).length,
+      });
     }
+    // 异步写入适配器（fire-and-forget，确保 Tauri 环境持久化）
+    this.saveAsync(state).catch(() => {
+      /* saveAsync 已自行上报错误，此处仅防止未捕获 rejection */
+    });
   }
 
   /** 异步保存（通过 IStorageAdapter，Tauri 环境下使用 Tauri Store） */
   async saveAsync(state: PilotState): Promise<void> {
     try {
       await this.storage.set(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      // 存储满时静默降级
+    } catch (err) {
+      ErrorReporter.captureError(err, {
+        source: 'PilotService',
+        action: 'saveAsync',
+        storageKey: STORAGE_KEY,
+        dataSize: JSON.stringify(state).length,
+      });
     }
   }
 

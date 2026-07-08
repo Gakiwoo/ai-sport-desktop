@@ -137,11 +137,9 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter((d) => d.kind === 'videoinput');
-        console.warn(`[AI Sport] 可用摄像头数量: ${videoDevices.length}`);
-        videoDevices.forEach((d, i) => {
-          console.warn(
-            `[AI Sport] 摄像头[${i}]: ${d.label || '未命名'} (id=${d.deviceId.slice(0, 8)}...)`,
-          );
+        ErrorReporter.captureInfo('摄像头设备枚举', {
+          source: 'CameraView',
+          count: videoDevices.length,
         });
         if (videoDevices.length > 0) {
           selectedDeviceId = videoDevices[0].deviceId;
@@ -183,14 +181,16 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
       }
 
       const track = stream.getVideoTracks()[0];
-      console.warn(
-        `[AI Sport] 摄像头已连接: ${track.label}, 分辨率: ${track.getSettings().width}x${track.getSettings().height}`,
-      );
+      ErrorReporter.captureInfo('摄像头已连接', {
+        source: 'CameraView',
+        trackLabel: track.label,
+        resolution: `${track.getSettings().width}x${track.getSettings().height}`,
+      });
 
       // 摄像头物理断连监听（保存引用以便 stopCamera 时 removeEventListener）
       trackEndedHandlerRef.current = () => {
         if (!mountedRef.current) return;
-        console.warn('[AI Sport] 摄像头连接已断开');
+        ErrorReporter.captureWarning('摄像头连接已断开', { source: 'CameraView' });
         cameraStateRef.current = 'error';
         setCameraState('error');
         setErrorMsg('摄像头连接已断开，请重新连接后刷新页面');
@@ -217,7 +217,6 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
       if (!mountedRef.current) return;
 
       // 3. 按需加载 MediaPipe Pose（进入训练页后才触发 CDN 加载）
-      console.warn('[AI Sport] 正在初始化 MediaPipe Pose...');
       setLoadingStep('正在加载 AI 引擎...');
 
       const MPPose = await loadMediaPipePose();
@@ -242,7 +241,7 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
 
       for (let cdnIdx = 0; cdnIdx < CDN_FALLBACKS.length && !poseReady; cdnIdx++) {
         const cdnBase = CDN_FALLBACKS[cdnIdx];
-        console.warn(`[AI Sport] 尝试 CDN[${cdnIdx}]: ${cdnBase}`);
+        ErrorReporter.captureInfo(`MediaPipe 尝试 CDN[${cdnIdx}]`, { source: 'CameraView', cdnBase });
 
         let candidate: MediaPipePose | null = null;
         try {
@@ -268,7 +267,10 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
           // 用超时控制首次初始化（30s），Promise.race 保证 send() 挂死时也能推进到下一个 CDN
           const timeoutPromise = new Promise<never>((_, reject) => {
             cdnTimeoutRef.current = setTimeout(() => {
-              console.warn(`[AI Sport] CDN[${cdnIdx}] 初始化超时，尝试下一个 CDN`);
+              ErrorReporter.captureWarning(`CDN[${cdnIdx}] 初始化超时`, {
+                source: 'CameraView',
+                cdnBase,
+              });
               candidate?.close?.();
               reject(new Error(`CDN[${cdnIdx}] initialization timed out`));
             }, 30_000);
@@ -289,14 +291,17 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
           }
           pose = candidate!;
           poseReady = true;
-          console.warn(`[AI Sport] MediaPipe Pose 初始化成功，使用 CDN[${cdnIdx}]`);
         } catch (err) {
           if (cdnTimeoutRef.current) {
             clearTimeout(cdnTimeoutRef.current);
             cdnTimeoutRef.current = null;
           }
           candidate?.close?.();
-          console.warn(`[AI Sport] CDN[${cdnIdx}] 初始化失败:`, err);
+          ErrorReporter.captureWarning(`CDN[${cdnIdx}] 初始化失败`, {
+            source: 'CameraView',
+            cdnBase,
+            error: err instanceof Error ? err.message : String(err),
+          });
         }
       }
 
@@ -350,7 +355,6 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
         cameraStateRef.current = 'ready'; // 立即更新 ref，不等 React batch
         setCameraState('ready');
         setLoadingStep('');
-        console.warn('[AI Sport] 摄像头和 AI 模型初始化完成');
       }
     } catch (err) {
       ErrorReporter.captureError(err, { source: 'CameraView', step: 'initCameraAndPose' });
@@ -417,9 +421,10 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
           await withPoseSendTimeout(
             poseRef.current.send({ image: videoRef.current }),
             () =>
-              console.warn(
-                `[AI Sport] pose.send 单帧推理超时（>${POSE_SEND_TIMEOUT_MS}ms），可能 WASM 挂死`,
-              ),
+              ErrorReporter.captureWarning('pose.send 单帧推理超时', {
+                source: 'CameraView',
+                timeoutMs: POSE_SEND_TIMEOUT_MS,
+              }),
           );
           // 记录推理耗时，用于设备性能分级
           const elapsed = performance.now() - frameStart;
@@ -429,9 +434,13 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
           aiErrorReportedRef.current = false; // 推理恢复，允许下次断线再次上报
         } catch (e) {
           poseErrorCountRef.current++;
-          console.warn(
-            `[AI Sport] pose.send error (${poseErrorCountRef.current}/${POSE_ERROR_THRESHOLD}):`,
-            e,
+          ErrorReporter.captureWarning(
+            `pose.send error (${poseErrorCountRef.current}/${POSE_ERROR_THRESHOLD})`,
+            {
+              source: 'CameraView',
+              error: e instanceof Error ? e.message : String(e),
+              consecutiveErrors: poseErrorCountRef.current,
+            },
           );
           // 连续失败超过阈值 → AI 模型断线，显示错误提示并一次性上报
           if (poseErrorCountRef.current >= POSE_ERROR_THRESHOLD) {

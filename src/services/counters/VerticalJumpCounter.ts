@@ -19,17 +19,21 @@ export class VerticalJumpCounter extends ExerciseCounter {
     measurementNoise: 0.008,
   });
 
-  /** 基线窗口：持续记录站立时的 Y 值（~3s @30fps） */
+  /** 基线窗口：持续记录站立时的 Y 值（~3s，默认 90 帧 @33ms/帧）；
+   *  帧间隔变化时通过 super.frameIntervalMs 获取当前值 */
   private readonly baselineWindow = new SlidingWindow(90);
 
-  /** 身体中心 Y 值滑动窗口（约 0.8 秒 @30fps） */
+  /** 身体中心 Y 值滑动窗口（约 0.8 秒，默认 25 帧 @33ms/帧）；
+   *  帧间隔变化时通过 super.frameIntervalMs 获取当前值 */
   private readonly yWindow = new SlidingWindow(25);
 
   /** 峰值检测器：检测 Y 值局部最小值（身体到达最高点） */
   private readonly peakDetector = new PeakDetector({
     neighborRadius: 2,
-    minPeakDistance: 12, // 纵跳频率较低，两次跳跃至少间隔 ~400ms
-    minPeakHeight: 0.025, // 提升：过滤微小抖动误触发
+    /** 纵跳频率较低，两次跳跃至少间隔 ~400ms（12帧 @30fps） */
+    minPeakDistance: 12,
+    /** 提升后的高度阈值：0.025 归一化坐标 ≈ 人体身高的 2.5%，滤除微小抖动 */
+    minPeakHeight: 0.025,
   });
 
   /** 基线值（baselineWindow 中值） */
@@ -38,6 +42,7 @@ export class VerticalJumpCounter extends ExerciseCounter {
   /** 是否已完成初始校准 */
   private calibrated = false;
   private calibrationFrames = 0;
+  /** 校准所需帧数：用户稳定站立约 0.67s 后采集站立基线 */
   private readonly CALIBRATION_REQUIRED = 20;
 
   /** 上一次检测到峰值后的帧数（用于控制基线更新时机） */

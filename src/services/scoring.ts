@@ -1,4 +1,4 @@
-import type { ExerciseType } from '../types';
+import type { ExerciseSessionRecord, ExerciseType } from '../types';
 
 /**
  * Pilot 评分引擎（纯函数，双端共享同构实现）
@@ -144,5 +144,64 @@ export function scoreSession(input: ScoringInput): ScoringResult {
     qualityTier,
     qualityLabel: QUALITY_LABELS[qualityTier],
     compositeScore,
+  };
+}
+
+/**
+ * 从训练记录中提取评分输入（纯函数，双端共享）。
+ *
+ * 接受 Mobile 端 WorkoutSession（含可选 exerciseResult）或 Desktop 端
+ * ExerciseSessionRecord 作为输入，统一产出 ScoringInput，消除
+ * PilotService / useWorkoutScreen 之间的重复提取逻辑。
+ *
+ * 与 Mobile 端 extractScoringInput 保持语义一致：
+ * - score 优先取 exerciseResult.{distanceCm, heightCm, reps}，回退 session.{count, score}
+ * - scoreUnit 根据是否有距离/高度字段自动判断
+ * - validCount/invalidCount/foulCount/confidence 优先取 exerciseResult，回退默认值
+ */
+export function extractScoringInput(
+  session: {
+    exerciseType: ExerciseType;
+    count?: number;
+    /** Mobile 端：WorkoutSession.accuracy */
+    accuracy?: number;
+    /** Mobile 端：WorkoutSession.exerciseResult */
+    exerciseResult?: {
+      reps?: number;
+      distanceCm?: number;
+      heightCm?: number;
+      validCount: number;
+      invalidCount: number;
+      foulCount: number;
+      confidence: number;
+    };
+    /** Desktop 端：ExerciseSessionRecord 扁平字段 */
+    score?: number;
+    scoreUnit?: 'reps' | 'cm';
+    validCount?: number;
+    invalidCount?: number;
+    foulCount?: number;
+    confidence?: number;
+  },
+  targetCount?: number,
+  targetCm?: number,
+): ScoringInput {
+  const result = session.exerciseResult;
+  const scoreUnit: 'reps' | 'cm' =
+    result?.distanceCm || result?.heightCm ? 'cm'
+      : session.scoreUnit ?? 'reps';
+  const score =
+    result?.distanceCm ?? result?.heightCm ?? result?.reps
+      ?? session.score ?? session.count ?? 0;
+  return {
+    exerciseType: session.exerciseType,
+    score,
+    scoreUnit,
+    validCount: result?.validCount ?? session.validCount ?? session.count ?? 0,
+    invalidCount: result?.invalidCount ?? session.invalidCount ?? 0,
+    foulCount: result?.foulCount ?? session.foulCount ?? 0,
+    confidence: result?.confidence ?? session.confidence ?? session.accuracy ?? 0,
+    targetCount,
+    targetCm,
   };
 }

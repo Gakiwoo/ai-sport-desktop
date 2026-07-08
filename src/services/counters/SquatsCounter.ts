@@ -40,12 +40,15 @@ export class SquatsCounter extends ExerciseCounter {
   private calibrationSamples: number[] = [];
   private calibrationHipSamples: number[] = [];
   private calibrationCenterYSamples: number[] = [];
+  /** 校准所需样本数：用户稳定站立 3 帧后采集站立参考值（膝角+髋角+重心Y） */
   private readonly CALIBRATION_REQUIRED = 3;
 
   // ── 动态阈值 ──
   private standingKneeAngle: number | null = null;
   private standingHipAngle: number | null = null;
   private standingCenterY: number | null = null;
+  /** 蹲深评分的下蹲阈值：综合评分 < 此值视为"蹲到位"；
+   *  基于多信号加权（膝角 50% + 髋角 30% + 重心位移 20%）的经验标定 */
   private downScoreThreshold = 0.55;
 
   // ── 峰值配对 ──

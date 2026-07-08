@@ -59,6 +59,8 @@ export function useWorkout(exerciseType: ExerciseType) {
   // counter 改用 ref 持有，避免 useState 导致 processFrame/getFeedback 引用抖动
   // 切换 exerciseType 时同步重建（见下方 useEffect）
   const counterRef = useRef<ExerciseCounter>(createCounter(exerciseType));
+  /** 上一帧处理时间戳，用于运行时估算帧间隔 */
+  const lastFrameTimeRef = useRef<number>(0);
 
   // ── 暂停/恢复状态 ──
   const [isPaused, setIsPaused] = useState(false);
@@ -132,6 +134,19 @@ export function useWorkout(exerciseType: ExerciseType) {
   const processFrame = useCallback(
     (pose: Pose) => {
       if (!isActiveRef.current || isPausedRef.current) return;
+
+      // 运行时帧间隔估算：传递实际帧间隔给计数器，替代固定 30fps 假设
+      const now = performance.now();
+      if (lastFrameTimeRef.current > 0) {
+        const actualIntervalMs = now - lastFrameTimeRef.current;
+        // 仅当帧间隔偏差 ≥5ms 时更新，避免每帧调用 setFrameInterval 产生微小抖动
+        const currentInterval = counterRef.current.getFrameInterval();
+        if (Math.abs(actualIntervalMs - currentInterval) >= 5) {
+          counterRef.current.setFrameInterval(actualIntervalMs);
+        }
+      }
+      lastFrameTimeRef.current = now;
+
       counterRef.current.processFrame(pose);
       const newCount = counterRef.current.getCount();
       if (newCount !== prevCountRef.current) {

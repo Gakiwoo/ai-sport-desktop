@@ -31,8 +31,10 @@ export class StandingLongJumpCounter extends ExerciseCounter {
   /** 峰值检测器 */
   private readonly peakDetector = new PeakDetector({
     neighborRadius: 2,
-    minPeakDistance: 20, // 立定跳远频率很低，两次跳跃至少间隔 ~667ms
-    minPeakHeight: 0.025, // 立定跳远位移较大，阈值更高
+    /** 立定跳远频率低，两次跳跃至少间隔 ~667ms（20帧 @30fps） */
+    minPeakDistance: 20,
+    /** 立定跳远位移明显，峰值阈值高于纵跳（0.025 vs 纵跳的数值） */
+    minPeakHeight: 0.025,
   });
 
   /** 基线值（baselineWindow 中值） */
@@ -41,6 +43,7 @@ export class StandingLongJumpCounter extends ExerciseCounter {
   /** 校准参数 */
   private calibrated = false;
   private calibrationFrames = 0;
+  /** 校准所需帧数：用户稳定站立约 0.67s 后开始记录基线 */
   private readonly CALIBRATION_REQUIRED = 20;
 
   /** 上一次检测到峰值后的帧数 */

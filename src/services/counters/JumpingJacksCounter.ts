@@ -28,8 +28,9 @@ export class JumpingJacksCounter extends ExerciseCounter {
   private calibrated = false;
   private calibrationSamples: number[] = [];
   private calibrationAnkleSamples: number[] = [];
+  /** 校准所需样本数：3 帧内采集手腕和脚踝的静态展幅基线 */
   private readonly CALIBRATION_REQUIRED = 3;
-  /** 校准方差窗口——检测是否静止 */
+  /** 校准方差窗口（10 帧）：检测用户是否静止站立，避免运动中误校准 */
   private readonly stabilityWindow = new SlidingWindow(10);
 
   // ── 动态阈值 ──
