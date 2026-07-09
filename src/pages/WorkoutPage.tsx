@@ -4,6 +4,7 @@ import { ExerciseType, Pose, FormFeedback, WorkoutSession } from '../types';
 import { EXERCISE_NAMES, DEFAULT_TARGETS, EXERCISE_CONFIGS } from '../constants/exerciseConfig';
 import CameraView from '../components/CameraView';
 import { useWorkout } from '../hooks/useWorkout';
+import { useNotification } from '../hooks/useNotification';
 import { playGoalReached } from '../services/SoundService';
 import './WorkoutPage.css';
 
@@ -58,12 +59,11 @@ export default function WorkoutPage() {
   const [resultSession, setResultSession] = useState<WorkoutSession | null>(null);
   const [targetInput, setTargetInput] = useState(DEFAULT_TARGETS[type].toString());
   const [inputError, setInputError] = useState(false);
-  const [notification, setNotification] = useState<string | null>(null);
-  const [notifExiting, setNotifExiting] = useState(false);
+
+  // ── 通知逻辑（抽取到 useNotification hook，R7 收尾）──
+  const { notification, notifExiting, showNotification, dismissNotification } = useNotification();
 
   // ── Refs ──
-  const notifTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const notifExitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const hasShownCompletion = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -73,40 +73,6 @@ export default function WorkoutPage() {
   const handleStartRef = useRef<() => void>(() => {});
   const handleStopClickRef = useRef<() => void>(() => {});
   const lastFeedbackTimeRef = useRef(0);
-
-  // ── 通知管理 ──
-  const showNotification = useCallback((msg: string) => {
-    if (notifTimerRef.current) clearTimeout(notifTimerRef.current);
-    if (notifExitTimerRef.current) {
-      clearTimeout(notifExitTimerRef.current);
-      notifExitTimerRef.current = null;
-    }
-    setNotification(msg);
-    setNotifExiting(false);
-    notifTimerRef.current = setTimeout(() => {
-      setNotifExiting(true);
-      notifExitTimerRef.current = setTimeout(() => {
-        setNotification(null);
-        setNotifExiting(false);
-        notifExitTimerRef.current = null;
-      }, 250);
-    }, 4000);
-  }, []);
-
-  const dismissNotification = useCallback(() => {
-    if (notifTimerRef.current) clearTimeout(notifTimerRef.current);
-    if (notifExitTimerRef.current) {
-      clearTimeout(notifExitTimerRef.current);
-      notifExitTimerRef.current = null;
-    }
-    if (!notification) return;
-    setNotifExiting(true);
-    notifExitTimerRef.current = setTimeout(() => {
-      setNotification(null);
-      setNotifExiting(false);
-      notifExitTimerRef.current = null;
-    }, 250);
-  }, [notification]);
 
   // ── 目标设置弹窗回调 ──
   const handleTargetConfirm = useCallback(
@@ -149,8 +115,6 @@ export default function WorkoutPage() {
   // ── 组件卸载清理 ──
   useEffect(() => {
     return () => {
-      if (notifTimerRef.current) clearTimeout(notifTimerRef.current);
-      if (notifExitTimerRef.current) clearTimeout(notifExitTimerRef.current);
       if (stopResultTimerRef.current) clearTimeout(stopResultTimerRef.current);
     };
   }, []);

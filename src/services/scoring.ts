@@ -1,4 +1,4 @@
-import type { ExerciseSessionRecord, ExerciseType } from '../types';
+import type { ExerciseType } from '../types';
 
 /**
  * Pilot 评分引擎（纯函数，双端共享同构实现）
