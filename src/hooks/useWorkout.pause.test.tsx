@@ -23,6 +23,7 @@ vi.mock('../services/counters/SquatsCounter', () => ({
     getFeedback = vi.fn(() => null);
     reset = vi.fn();
     getPhase = vi.fn(() => 'neutral');
+    getFrameInterval = vi.fn(() => 33);
     setFrameInterval = vi.fn();
   },
 }));
