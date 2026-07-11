@@ -10,6 +10,7 @@
     "test:watch": "vitest",
     "preview": "vite preview",
     "tauri": "tauri",
+    "tauri:build:windows": "node scripts/build-windows.mjs",
     "tauri:signer": "npx tauri signer generate --write-keys src-tauri/updater.key --ci",
     "tauri:icons": "npx tauri icon icons/Gakiwoo.png",
     "setup:mediapipe": "node scripts/setup-mediapipe.mjs",

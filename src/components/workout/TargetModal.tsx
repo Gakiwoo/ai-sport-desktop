@@ -61,9 +61,7 @@ export default function TargetModal({
     }
     onError(false);
     const clamped =
-      mode === 'count'
-        ? Math.max(1, Math.min(val, 9999))
-        : Math.max(10, Math.min(val, 3600));
+      mode === 'count' ? Math.max(1, Math.min(val, 9999)) : Math.max(10, Math.min(val, 3600));
     onConfirm(mode, clamped);
   };
 
@@ -82,16 +80,17 @@ export default function TargetModal({
       onClick={handleOverlayClick}
     >
       <div className="modal-box" onClick={handleBoxClick}>
-        <h3 className="modal-title">
-          {mode === 'count' ? '设置目标次数' : '设置目标时长（秒）'}
-        </h3>
+        <h3 className="modal-title">{mode === 'count' ? '设置目标次数' : '设置目标时长（秒）'}</h3>
 
         <input
           ref={inputRef}
           type="number"
           className={`modal-input${error ? ' modal-input--invalid' : ''}`}
           value={value}
-          onChange={(e) => { onError(false); onChange(e.target.value); }}
+          onChange={(e) => {
+            onError(false);
+            onChange(e.target.value);
+          }}
           onKeyDown={handleKeyDown}
           min={mode === 'count' ? 1 : 10}
           max={mode === 'count' ? 9999 : 3600}
@@ -100,18 +99,10 @@ export default function TargetModal({
         />
 
         <div className="modal-actions">
-          <button
-            type="button"
-            className="modal-btn modal-btn--cancel"
-            onClick={onClose}
-          >
+          <button type="button" className="modal-btn modal-btn--cancel" onClick={onClose}>
             取消
           </button>
-          <button
-            type="button"
-            className="modal-btn modal-btn--confirm"
-            onClick={commit}
-          >
+          <button type="button" className="modal-btn modal-btn--confirm" onClick={commit}>
             确定
           </button>
         </div>

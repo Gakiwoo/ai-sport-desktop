@@ -32,10 +32,7 @@ export default function ResultPanel({
   onAgain,
   onViewHistory,
 }: ResultPanelProps) {
-  const rate =
-    session.duration > 0
-      ? ((session.count / session.duration) * 60).toFixed(1)
-      : '—';
+  const rate = session.duration > 0 ? ((session.count / session.duration) * 60).toFixed(1) : '—';
 
   const handleOverlayClick = () => onDismiss();
 
@@ -62,9 +59,7 @@ export default function ResultPanel({
           </div>
           <div className="result-stat-divider" />
           <div className="result-stat">
-            <div className="result-stat-value result-stat--accent">
-              {session.count}
-            </div>
+            <div className="result-stat-value result-stat--accent">{session.count}</div>
             <div className="result-stat-label">完成次数</div>
           </div>
           <div className="result-stat-divider" />
@@ -82,23 +77,13 @@ export default function ResultPanel({
           <div className="result-badge">✅ 已达成目标</div>
         )}
 
-        <div className="result-rate">
-          平均速率 {rate} 次/分钟
-        </div>
+        <div className="result-rate">平均速率 {rate} 次/分钟</div>
 
         <div className="result-actions">
-          <button
-            type="button"
-            className="modal-btn modal-btn--confirm"
-            onClick={onAgain}
-          >
+          <button type="button" className="modal-btn modal-btn--confirm" onClick={onAgain}>
             再来一次
           </button>
-          <button
-            type="button"
-            className="modal-btn modal-btn--cancel"
-            onClick={onViewHistory}
-          >
+          <button type="button" className="modal-btn modal-btn--cancel" onClick={onViewHistory}>
             查看历史
           </button>
         </div>

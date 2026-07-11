@@ -64,11 +64,7 @@ export default function StopConfirmModal({
           确认结束本次训练？
         </p>
         <div className="modal-actions">
-          <button
-            type="button"
-            className="modal-btn modal-btn--cancel"
-            onClick={onClose}
-          >
+          <button type="button" className="modal-btn modal-btn--cancel" onClick={onClose}>
             继续训练
           </button>
           <button

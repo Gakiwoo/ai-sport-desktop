@@ -69,12 +69,14 @@ export function useTheme() {
 
   // 启动时异步从存储适配器读取，防止主题闪烁
   useEffect(() => {
-    safeGetStorage(STORAGE_KEY).then((stored) => {
-      if (stored === 'light' || stored === 'dark' || stored === 'system') {
-        setThemeState(stored as Theme);
-        applyTheme(stored as Theme);
-      }
-    }).finally(() => setHydrated(true));
+    safeGetStorage(STORAGE_KEY)
+      .then((stored) => {
+        if (stored === 'light' || stored === 'dark' || stored === 'system') {
+          setThemeState(stored as Theme);
+          applyTheme(stored as Theme);
+        }
+      })
+      .finally(() => setHydrated(true));
   }, []);
 
   const setTheme = useCallback(async (newTheme: Theme) => {

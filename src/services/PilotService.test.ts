@@ -7,6 +7,12 @@ import type {
   TrainingTask,
 } from '../types';
 
+const contractFixtureModules = import.meta.glob('./fixtures/pilot-v1/mobile-results.json', {
+  eager: true,
+  import: 'default',
+});
+const mobileContractPackage = Object.values(contractFixtureModules)[0] as PilotDataPackage;
+
 function dataPackage(): PilotDataPackage {
   return {
     schemaVersion: 'pilot-v1',
@@ -77,6 +83,20 @@ describe('PilotService', () => {
     expect(second.imported).toBe(0);
     expect(second.skipped).toBe(1);
     expect(second.state.sessions).toHaveLength(1);
+  });
+
+  it('imports the cross-repo mobile contract and honors targetCm', () => {
+    const service = new PilotService();
+
+    const state = service.importPackage(JSON.stringify(mobileContractPackage)).state;
+    const task = state.tasks.find((item) => item.id === 'contract-long-jump-task');
+    const session = state.sessions.find((item) => item.id === 'contract-session');
+
+    expect(task?.targetCm).toBe(165);
+    expect(session).toBeTruthy();
+    const scoring = service.scoreSessionRecord(session!, task);
+    expect(scoring.completionRatio).toBeCloseTo(160 / 165);
+    expect(scoring.rating).toBe('pass');
   });
 
   it('filters sessions and persists review state', () => {

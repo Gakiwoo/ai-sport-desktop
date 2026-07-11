@@ -1,17 +1,5 @@
-# Cargo 本地配置
+# Cargo 项目配置。
 #
-# 把编译产物目录（target）固定到同步盘之外，避免百度网盘/OneDrive 等同步盘
-# 对 build-script 的文件锁竞争导致的 "os error 5（拒绝访问）" 编译失败。
-#
-# 本文件使用相对于 Cargo 工作区根目录（src-tauri/）的路径，
-# 将 target 放在项目根目录之外，跨平台兼容 Windows / macOS / Linux。
-#
-# 如需完全自定义路径，可删除本文件，改用环境变量：
-#     Windows PowerShell:  $env:CARGO_TARGET_DIR = "D:\cargo-target\ai-sport-desktop"
-#     Windows CMD:         set CARGO_TARGET_DIR=D:\cargo-target\ai-sport-desktop
-#     macOS / Linux:       export CARGO_TARGET_DIR=$HOME/.cache/ai-sport-desktop-target
-#
-# 注意：target 目录体积较大（可达数 GB）且会频繁变动，不应纳入同步盘。
-
-[build]
-target-dir = "../.cargo-target"
+# 日常 cargo 命令使用默认的 src-tauri/target（已加入 .gitignore）。
+# Windows 安装器验证请使用 `npm run tauri:build:windows`，该脚本会通过
+# CARGO_TARGET_DIR 把高频编译缓存放到系统临时目录，并校验 NSIS 产物。

@@ -100,6 +100,8 @@ export interface TrainingTask {
   name: string;
   exerciseType: ExerciseType;
   targetCount?: number;
+  /** 显式厘米目标（距离类项目）；缺省时评分引擎使用项目参考值 */
+  targetCm?: number;
   targetDurationSec?: number;
   startsAt?: string;
   endsAt?: string;

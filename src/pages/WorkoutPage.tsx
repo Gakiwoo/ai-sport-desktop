@@ -154,7 +154,7 @@ export default function WorkoutPage() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showTargetModal, showStopConfirm, resultSession, isActive]);
+  }, [showTargetModal, showStopConfirm, resultSession, isActive, anyModalOpen]);
 
   // ── 弹窗焦点锁定 ──
   useEffect(() => {

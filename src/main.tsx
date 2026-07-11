@@ -14,7 +14,10 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker
     .register('/sw.js', { scope: '/' })
     .then((reg) => {
-      console.log('[SW] Service Worker 已注册，scope:', reg.scope);
+      ErrorReporter.captureInfo('Service Worker registered', {
+        source: 'main',
+        scope: reg.scope,
+      });
     })
     .catch((err) => {
       console.warn('[SW] Service Worker 注册失败（非关键，App 仍可正常工作）:', err);

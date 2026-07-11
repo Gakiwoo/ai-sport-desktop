@@ -145,7 +145,10 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
           selectedDeviceId = videoDevices[0].deviceId;
         }
       } catch (e) {
-        ErrorReporter.captureWarning('枚举摄像头设备失败', { source: 'CameraView', error: String(e) });
+        ErrorReporter.captureWarning('枚举摄像头设备失败', {
+          source: 'CameraView',
+          error: String(e),
+        });
       }
 
       // 2. 请求摄像头权限和流
@@ -162,15 +165,21 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
         stream = await navigator.mediaDevices.getUserMedia(constraints);
       } catch (firstErr) {
         // fallback: 不指定 deviceId，让系统自动选择
-        ErrorReporter.captureWarning('getUserMedia 首次失败，尝试 fallback', { source: 'CameraView', error: String(firstErr) });
+        ErrorReporter.captureWarning('getUserMedia 首次失败，尝试 fallback', {
+          source: 'CameraView',
+          error: String(firstErr),
+        });
         try {
           stream = await navigator.mediaDevices.getUserMedia({
             video: { width: { ideal: 640 }, height: { ideal: 480 } },
             audio: false,
           });
-      } catch (secondErr) {
-        // 最后 fallback: 最宽松的约束
-        ErrorReporter.captureWarning('getUserMedia 第二次失败，尝试最宽松约束', { source: 'CameraView', error: String(secondErr) });
+        } catch (secondErr) {
+          // 最后 fallback: 最宽松的约束
+          ErrorReporter.captureWarning('getUserMedia 第二次失败，尝试最宽松约束', {
+            source: 'CameraView',
+            error: String(secondErr),
+          });
           stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         }
       }
@@ -241,7 +250,10 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
 
       for (let cdnIdx = 0; cdnIdx < CDN_FALLBACKS.length && !poseReady; cdnIdx++) {
         const cdnBase = CDN_FALLBACKS[cdnIdx];
-        ErrorReporter.captureInfo(`MediaPipe 尝试 CDN[${cdnIdx}]`, { source: 'CameraView', cdnBase });
+        ErrorReporter.captureInfo(`MediaPipe 尝试 CDN[${cdnIdx}]`, {
+          source: 'CameraView',
+          cdnBase,
+        });
 
         let candidate: MediaPipePose | null = null;
         try {
@@ -418,13 +430,11 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
         processingRef.current = true;
         const frameStart = performance.now();
         try {
-          await withPoseSendTimeout(
-            poseRef.current.send({ image: videoRef.current }),
-            () =>
-              ErrorReporter.captureWarning('pose.send 单帧推理超时', {
-                source: 'CameraView',
-                timeoutMs: POSE_SEND_TIMEOUT_MS,
-              }),
+          await withPoseSendTimeout(poseRef.current.send({ image: videoRef.current }), () =>
+            ErrorReporter.captureWarning('pose.send 单帧推理超时', {
+              source: 'CameraView',
+              timeoutMs: POSE_SEND_TIMEOUT_MS,
+            }),
           );
           // 记录推理耗时，用于设备性能分级
           const elapsed = performance.now() - frameStart;
@@ -446,10 +456,10 @@ function CameraView({ onPoseDetected, isActive, exerciseType }: CameraViewProps)
           if (poseErrorCountRef.current >= POSE_ERROR_THRESHOLD) {
             if (!aiErrorReportedRef.current) {
               aiErrorReportedRef.current = true;
-              ErrorReporter.captureError(
-                new Error('AI 模型推理连续失败，切换到错误状态'),
-                { source: 'CameraView', consecutiveErrors: poseErrorCountRef.current },
-              );
+              ErrorReporter.captureError(new Error('AI 模型推理连续失败，切换到错误状态'), {
+                source: 'CameraView',
+                consecutiveErrors: poseErrorCountRef.current,
+              });
             }
             cameraStateRef.current = 'error';
             setCameraState('error');

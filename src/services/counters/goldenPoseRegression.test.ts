@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-// @ts-ignore - Node 内置模块由 vitest node 环境运行时提供，Desktop tsconfig 未引入 @types/node
+// @ts-expect-error - Vitest 提供 Node 运行时，Desktop tsconfig 未引入 @types/node
 import { writeFileSync } from 'fs';
-// @ts-ignore
+// @ts-expect-error - Vitest 提供 Node 运行时，Desktop tsconfig 未引入 @types/node
 import path from 'path';
 
 declare const process: {
@@ -53,13 +53,10 @@ describe('golden pose regression (desktop)', () => {
   // 跨端对比报告导出：设置 GOLDEN_REPORT=1 时写出 golden-report.json
   it('exports golden report when GOLDEN_REPORT is set', () => {
     if (!process.env.GOLDEN_REPORT) return;
-      const reportPath = path.resolve(
-        process.cwd(),
-        'src/services/counters/golden-report.json',
-      );
-      writeFileSync(
-        reportPath,
-        JSON.stringify(
+    const reportPath = path.resolve(process.cwd(), 'src/services/counters/golden-report.json');
+    writeFileSync(
+      reportPath,
+      JSON.stringify(
         {
           platform: 'desktop',
           generatedAt: new Date().toISOString(),

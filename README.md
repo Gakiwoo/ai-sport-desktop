@@ -2,31 +2,33 @@
 
 基于 **Tauri 2 + React 18 + TypeScript** 构建的 AI 运动计数桌面应用。通过摄像头实时捕捉人体骨骼关键点（MediaPipe Pose），结合卡尔曼滤波与状态机算法，自动识别并计数 6 种常见运动。
 
+> 当前状态（2026-07-10）：`npm run check` 全绿，24 个 Vitest files / 197 tests 通过，`npm run build` 通过。`npm run tauri:build:windows` 已在系统临时 Cargo target 中生成未签名 NSIS 安装器；签名、安装和卸载仍待验收。
+
 ## 技术栈
 
-| 层级 | 技术 |
-|------|------|
-| 前端框架 | React 18 + TypeScript 5（strict 模式）|
-| 构建工具 | Vite 8 |
-| 桌面框架 | Tauri 2（Rust 后端）|
-| AI 推理 | MediaPipe Pose（WebAssembly）|
-| 图表可视化 | Recharts |
-| 路由 | React Router v6 (HashRouter) |
-| 数据持久化 | Tauri Plugin Store + localStorage 降级（适配器模式）|
-| 自动更新 | Tauri Plugin Updater |
-| 测试 | Vitest + Testing Library |
-| 代码质量 | ESLint 10 + Prettier |
+| 层级       | 技术                                                 |
+| ---------- | ---------------------------------------------------- |
+| 前端框架   | React 18 + TypeScript 5（strict 模式）               |
+| 构建工具   | Vite 8                                               |
+| 桌面框架   | Tauri 2（Rust 后端）                                 |
+| AI 推理    | MediaPipe Pose（WebAssembly）                        |
+| 图表可视化 | Recharts                                             |
+| 路由       | React Router v6 (HashRouter)                         |
+| 数据持久化 | Tauri Plugin Store + localStorage 降级（适配器模式） |
+| 自动更新   | Tauri Plugin Updater                                 |
+| 测试       | Vitest + Testing Library                             |
+| 代码质量   | ESLint 10 + Prettier                                 |
 
 ## 支持运动项目
 
-| 项目 | 检测方式 | 核心算法 |
-|------|----------|----------|
-| 跳绳 | 手腕旋转 + 髋部/脚踝 Y 轴位移 | 4 状态机 + 迟滞阈值 |
-| 开合跳 | 手腕/踝关节展幅比率 | 峰值配对 + 多信号融合 |
-| 深蹲 | 膝关节角度 + 髋部角度 + 重心 Y | 多信号融合（50%/30%/20%）|
-| 立定跳远 | 髋部位移 + 落地检测 | 峰值检测 + 膝盖对齐反馈 |
-| 原地纵跳 | 髋部 Y 轴峰值检测 | 峰值检测 + 滞空验证 |
-| 仰卧起坐 | 躯干角度变化 + 头部位置 | 6 状态机 + 犯规检测 |
+| 项目     | 检测方式                       | 核心算法                  |
+| -------- | ------------------------------ | ------------------------- |
+| 跳绳     | 手腕旋转 + 髋部/脚踝 Y 轴位移  | 4 状态机 + 迟滞阈值       |
+| 开合跳   | 手腕/踝关节展幅比率            | 峰值配对 + 多信号融合     |
+| 深蹲     | 膝关节角度 + 髋部角度 + 重心 Y | 多信号融合（50%/30%/20%） |
+| 立定跳远 | 髋部位移 + 落地检测            | 峰值检测 + 膝盖对齐反馈   |
+| 原地纵跳 | 髋部 Y 轴峰值检测              | 峰值检测 + 滞空验证       |
+| 仰卧起坐 | 躯干角度变化 + 头部位置        | 6 状态机 + 犯规检测       |
 
 ## 快速开始
 
@@ -34,6 +36,7 @@
 
 1. **Node.js** >= 18
 2. **Rust** 工具链（Tauri 必须）：
+
    ```bash
    # Windows（PowerShell）
    winget install Rustlang.Rustup
@@ -43,6 +46,7 @@
 
    # 或访问 https://rustup.rs 下载安装
    ```
+
 3. **Tauri 系统依赖**：
    - **Windows**：需要 WebView2（Win10/11 已内置）
    - **macOS**：需要 Xcode Command Line Tools（`xcode-select --install`）
@@ -62,11 +66,14 @@ npm run setup:mediapipe
 # 4. 开发模式（热重载）
 npm run tauri dev
 
-# 5. 生产构建
+# 5. Windows 本地验证构建（系统临时 Cargo target）
+npm run tauri:build:windows
+
+# 6. 其他平台/正式配置构建
 npm run tauri build
-# Windows → src-tauri/target/release/bundle/msi/*.msi / *.exe
-# macOS   → src-tauri/target/release/bundle/dmg/*.dmg
 ```
+
+当前 `tauri.conf.json` 只配置 `nsis` 和 `dmg`，没有 MSI target。Windows 与 macOS 安装包必须分别在对应系统完成构建、安装和签名验收。
 
 ### 生成更新签名密钥
 
@@ -78,8 +85,7 @@ npm run tauri:signer
 
 ### 同步盘注意事项
 
-若项目位于百度网盘/OneDrive 等同步盘内，Rust 编译可能因文件锁竞争报 `os error 5`。
-已在 `src-tauri/.cargo/config.toml` 中将编译产物目录指向项目外的 `../.cargo-target/`（相对于 `src-tauri/`），跨平台兼容 Windows / macOS。
+若项目位于同步盘内，Rust 编译可能因文件锁竞争或安全策略失败。`npm run tauri:build:windows` 会把 `CARGO_TARGET_DIR` 指向系统临时目录，只生成本机 NSIS 并校验产物。日常 Cargo 命令仍使用默认的 `src-tauri/target/`，两个缓存位置都不会进入版本控制。
 
 如需自定义路径，可删除该配置文件，改用环境变量：
 
@@ -99,7 +105,8 @@ src/
 │   ├── HomePage.tsx          #   运动类型选择（卡片网格）
 │   ├── WorkoutPage.tsx       #   训练页（左侧控制 + 右侧摄像头）
 │   ├── HistoryPage.tsx       #   训练历史（按日期分组 + 类型筛选）
-│   └── AnalyticsPage.tsx     #   数据分析（统计卡片 + 图表）
+│   ├── AnalyticsPage.tsx     #   数据分析（统计卡片 + 图表）
+│   └── TeacherPage.tsx       #   校园试点：实体、成绩、复核和导出
 ├── components/               # 通用组件
 │   ├── CameraView.tsx        #   摄像头与 AI 引擎编排
 │   ├── CameraOverlay.tsx     #   摄像头覆盖层（idle/loading/ready/error）
@@ -131,6 +138,7 @@ src/
 │   ├── PoseDetectionService.ts   # 姿态检测（关键点查找 + 角度计算）
 │   ├── MediaPipeLoader.ts   #   MediaPipe CDN/本地加载器（多源容错 + SRI）
 │   ├── StorageService.ts    #   持久化服务（CRUD + 导出导入）
+│   ├── PilotService.ts      #   pilot-v1、班级/学生/任务、复核、CSV/XLSX
 │   ├── SoundService.ts      #   Web Audio API 音效合成
 │   ├── ErrorReporter.ts     #   错误上报（本地日志 + 远程端点）
 │   └── UpdaterService.ts    #   自动更新服务
@@ -151,18 +159,19 @@ scripts/                      # 辅助脚本
 
 ## NPM 脚本参考
 
-| 命令 | 说明 |
-|------|------|
-| `npm run dev` | Vite 开发服务器 |
-| `npm run tauri dev` | Tauri 开发模式（含热重载）|
-| `npm run tauri build` | Tauri 生产构建（Windows .msi + macOS .dmg）|
-| `npm run tauri:icons` | 从源 PNG 生成全平台图标（含 .icns / .ico）|
-| `npm run setup:mediapipe` | 下载 AI 模型到本地 |
-| `npm run tauri:signer` | 生成更新签名密钥对 |
-| `npm test` | 运行单元测试 |
-| `npm run lint` | ESLint 检查 |
-| `npm run format` | Prettier 格式化 |
-| `npm run check` | lint + format + test 全套检查 |
+| 命令                          | 说明                                                           |
+| ----------------------------- | -------------------------------------------------------------- |
+| `npm run dev`                 | Vite 开发服务器                                                |
+| `npm run tauri dev`           | Tauri 开发模式（含热重载）                                     |
+| `npm run tauri build`         | Tauri 原生生产构建（Windows NSIS / macOS DMG，按平台分别验证） |
+| `npm run tauri:build:windows` | Windows 未签名 NSIS 验证构建，使用临时 Cargo target 并校验产物 |
+| `npm run tauri:icons`         | 从源 PNG 生成全平台图标（含 .icns / .ico）                     |
+| `npm run setup:mediapipe`     | 下载 AI 模型到本地                                             |
+| `npm run tauri:signer`        | 生成更新签名密钥对                                             |
+| `npm test`                    | 运行单元测试                                                   |
+| `npm run lint`                | ESLint 检查                                                    |
+| `npm run format`              | Prettier 格式化                                                |
+| `npm run check`               | lint + format + test 全套检查                                  |
 
 ## 相比移动版的改进
 
@@ -178,12 +187,13 @@ scripts/                      # 辅助脚本
 - ✅ 错误上报服务（本地日志 + 远程端点）
 - ✅ TypeScript strict 模式全程开启
 - ✅ 完善的单元测试覆盖（核心逻辑 + 算法 + 组件）
-- ✅ 跨平台构建：Windows (.msi/.exe) + macOS (.dmg)
-- ✅ **自适应设备性能分级**：实测推理耗时，三档（high/balanced/constrained）自动跳帧
-- ✅ **Service Worker 离线缓存**：11.6MB 模型文件 SW 缓存，二次加载秒开
+- 校园试点教师端：班级/学生/任务 CRUD、`pilot-v1` 文件导入、成绩筛选、异常复核、CSV/XLSX
+- 前端生产资源可构建；Windows NSIS 与 macOS DMG 仍需对应平台的发布验收
+- ✅ **自适应设备性能分级**：根据运行时推理耗时在 high/balanced/constrained 三档间自动调整
+- ✅ **Service Worker 离线缓存**：缓存模型资源，减少重复下载；实际加载时间取决于设备与缓存状态
 - ✅ **CDN 预连接优化**：dns-prefetch + preconnect 到 4 个 CDN 源
-- ✅ **推理超时保护**：pose.send() 500ms 超时（原 2s），实际推理 25-40ms
-- ✅ **自建 CDN**：`gakiwoo.com/static/mediapipe/pose/` 提供 24MB 模型文件（含 lite + full）
+- ✅ **推理超时保护**：`pose.send()` 500ms 超时；实际推理耗时需按目标硬件测量
+- ✅ **自建 CDN**：`gakiwoo.com/static/mediapipe/pose/` 提供模型资源；2026-07-10 已确认 lite 模型在线
 - ✅ **帧间隔自适应**：ExerciseCounter 基类支持 frameIntervalMs，适配不同帧率设备
 
 ## macOS 构建注意事项
@@ -203,7 +213,7 @@ npm run tauri:icons
 npm run tauri build
 ```
 
-构建产物位于 `src-tauri/target/release/bundle/dmg/`。
+使用默认 Cargo 配置时，构建产物位于 `src-tauri/target/release/bundle/dmg/`。若设置了 `CARGO_TARGET_DIR`，以该目录下的 `release/bundle/dmg/` 为准。
 
 ### 代码签名（发布到非 App Store）
 

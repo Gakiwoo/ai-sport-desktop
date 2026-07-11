@@ -1,6 +1,8 @@
 # 系统架构文档 — AI 运动助手桌面版
 
-> 版本：1.0.0 | 更新日期：2025-06-25
+> 版本：1.0.0 | 更新日期：2026-07-10
+>
+> 当前验证边界：`npm run check` 全绿，197 项 Vitest 与前端生产构建通过；未签名 Windows NSIS 已产出，签名与安装/卸载仍待验收。
 
 ## 一、总体架构
 
@@ -8,8 +10,8 @@
 ┌──────────────────────────────────────────────────────────┐
 │                    Presentation Layer                     │
 │  ┌─────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐ │
-│  │HomePage │  │WorkoutPg │  │HistoryPg │  │Analytics │ │
-│  │   (/)   │  │(/workout)│  │(/history)│  │(/analyt) │ │
+│  │HomePage │  │WorkoutPg │  │HistoryPg │  │TeacherPg│ │
+│  │   (/)   │  │(/workout)│  │(/history)│  │(/teacher)│ │
 │  └────┬────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘ │
 ├───────┴────────────┴──────────────┴──────────────┴───────┤
 │                     Business Logic                        │
@@ -20,7 +22,7 @@
 │       │              │                    │               │
 │  ┌────┴──────┐  ┌────┴──────────┐  ┌─────┴──────────┐  │
 │  │ SoundSvc  │  │PoseDetectSvc  │  │ 6x Counters    │  │
-│  │ StorageSvc│  │MediaPipeLoader│  │ + KalmanFilter │  │
+│  │ StorageSvc│  │MediaPipeLoader│  │ + PilotService │  │
 │  └───────────┘  └───────────────┘  └────────────────┘  │
 ├─────────────────────────────────────────────────────────┤
 │                    Service Layer                          │
@@ -74,6 +76,22 @@ StorageService.save(session)
 支持 JSON/CSV 导出，最大 500 条记录，超过时自动裁剪最旧记录。
 ```
 
+### 2.3 校园试点数据流
+
+```text
+TeacherPage
+  -> PilotService 维护 school/classroom/student/task
+  -> 导出 pilot-v1 基础包
+  -> Mobile 导入、选择学生与任务、完成训练
+  -> Mobile 分享 pilot-v1 成绩包
+  -> TeacherPage 文件/文本导入
+  -> 按班级/学生/任务/项目筛选
+  -> normal/suspicious/reviewed 复核
+  -> CSV 或 XLSX 导出
+```
+
+`PilotService` 当前使用本地存储适配器，不依赖线上 Pilot API。文件往返代码和服务测试已具备，真实 Android 到 Desktop 的人工验收仍待完成。
+
 ## 三、组件树
 
 ```
@@ -94,6 +112,7 @@ StorageService.save(session)
         </Route>
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path="/teacher" element={<TeacherPage />} />
       </Routes>
     </HashRouter>
   </ErrorBoundary>
@@ -104,13 +123,14 @@ StorageService.save(session)
 
 不使用全局状态库（Redux/Zustand），采用以下模式：
 
-| 模式 | 用途 | 实现 |
-|------|------|------|
-| **useWorkout Hook** | 训练会话状态 | isActive, count, mode, targetCount/Duration, timeUp |
-| **useRef 模式** | 闭包陷阱解决 | isActiveRef, stopRef, cameraStateRef 等 |
-| **useTheme Hook** | 主题状态 | light/dark/system，CSS 变量驱动 |
-| **StorageService 单例** | 持久化状态 | 内存缓存 + 适配器 |
-| **Props 传递** | 跨组件通信 | CameraView → onPoseDetected → useWorkout |
+| 模式                    | 用途                 | 实现                                                |
+| ----------------------- | -------------------- | --------------------------------------------------- |
+| **useWorkout Hook**     | 训练会话状态         | isActive, count, mode, targetCount/Duration, timeUp |
+| **useRef 模式**         | 闭包陷阱解决         | isActiveRef, stopRef, cameraStateRef 等             |
+| **useTheme Hook**       | 主题状态             | light/dark/system，CSS 变量驱动                     |
+| **StorageService 单例** | 持久化状态           | 内存缓存 + 适配器                                   |
+| **PilotService 单例**   | 校园实体、成绩、复核 | `pilot-v1` + 存储适配器                             |
+| **Props 传递**          | 跨组件通信           | CameraView → onPoseDetected → useWorkout            |
 
 ## 五、运动算法架构
 
@@ -189,7 +209,8 @@ tsc --noEmit (类型检查)
 
 ```
 cargo build --release
-  ├── target-dir → D:\cargo-target\ (同步盘外)
+  ├── 默认 target-dir → src-tauri/target/
+  ├── Windows 验证脚本 → 系统临时目录 ai-sport-desktop-cargo-target
   ├── tauri-plugin-store
   ├── tauri-plugin-updater
   └── 3x Tauri Commands
@@ -197,18 +218,22 @@ cargo build --release
 
 ## 八、测试策略
 
-| 层级 | 工具 | 覆盖范围 |
-|------|------|----------|
-| 组件测试 | Testing Library + jsdom | 页面渲染、交互行为、错误状态 |
-| Hook 测试 | renderHook | useWorkout 状态转换逻辑 |
-| 服务测试 | Vitest | Storage/MediaPipe/Sound/PoseDetection |
-| 算法测试 | Vitest | 卡尔曼滤波、计数器状态机、峰值检测 |
-| 配置测试 | Vitest | exerciseConfig 常量正确性 |
+| 层级      | 工具                    | 覆盖范围                              |
+| --------- | ----------------------- | ------------------------------------- |
+| 组件测试  | Testing Library + jsdom | 页面渲染、交互行为、错误状态          |
+| Hook 测试 | renderHook              | useWorkout 状态转换逻辑               |
+| 服务测试  | Vitest                  | Storage/MediaPipe/Sound/PoseDetection |
+| 算法测试  | Vitest                  | 卡尔曼滤波、计数器状态机、峰值检测    |
+| 配置测试  | Vitest                  | exerciseConfig 常量正确性             |
+
+2026-07-10 基线：24 个测试文件、197 项测试通过，`npm run check` 的 ESLint、Prettier 和 Vitest 均通过。
 
 ## 九、已知限制
 
-1. **MediaPipe WASM 性能**：CPU 推理约 20-30 FPS，取决于机器性能
+1. **MediaPipe WASM 性能**：实际帧率取决于机器、摄像头和模型档位，尚无统一硬件基准报告
 2. **多摄像头**：仅支持默认摄像头，不支持热切换
 3. **运动类型扩展**：需新增 Counter 子类 + exerciseConfig 注册
 4. **离线模型**：需预先运行 `npm run setup:mediapipe` 下载
-5. **构建环境**：Rust 编译要求 `target-dir` 在同步盘外
+5. **构建环境**：未签名 NSIS 已通过临时 target 构建；正式发布仍需签名、安装/卸载和更新验证
+6. **本地试点**：`pilot-v1` 真机跨端往返尚未完成人工验收
+7. **云端能力**：Desktop 未接入 Sync/Pilot API，当前以本地文件包为准

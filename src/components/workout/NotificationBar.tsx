@@ -13,11 +13,7 @@ interface NotificationBarProps {
  * - 点击通知条任意位置可关闭
  * - 支持退出动画（外部控制 exiting 状态）
  */
-export default function NotificationBar({
-  message,
-  exiting,
-  onDismiss,
-}: NotificationBarProps) {
+export default function NotificationBar({ message, exiting, onDismiss }: NotificationBarProps) {
   if (!message) return null;
 
   return (

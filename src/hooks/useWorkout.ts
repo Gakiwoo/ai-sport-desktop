@@ -131,32 +131,29 @@ export function useWorkout(exerciseType: ExerciseType) {
     }
   }, [timeUp, isActive, stopActivity, mode]);
 
-  const processFrame = useCallback(
-    (pose: Pose) => {
-      if (!isActiveRef.current || isPausedRef.current) return;
+  const processFrame = useCallback((pose: Pose) => {
+    if (!isActiveRef.current || isPausedRef.current) return;
 
-      // 运行时帧间隔估算：传递实际帧间隔给计数器，替代固定 30fps 假设
-      const now = performance.now();
-      if (lastFrameTimeRef.current > 0) {
-        const actualIntervalMs = now - lastFrameTimeRef.current;
-        // 仅当帧间隔偏差 ≥5ms 时更新，避免每帧调用 setFrameInterval 产生微小抖动
-        const currentInterval = counterRef.current.getFrameInterval();
-        if (Math.abs(actualIntervalMs - currentInterval) >= 5) {
-          counterRef.current.setFrameInterval(actualIntervalMs);
-        }
+    // 运行时帧间隔估算：传递实际帧间隔给计数器，替代固定 30fps 假设
+    const now = performance.now();
+    if (lastFrameTimeRef.current > 0) {
+      const actualIntervalMs = now - lastFrameTimeRef.current;
+      // 仅当帧间隔偏差 ≥5ms 时更新，避免每帧调用 setFrameInterval 产生微小抖动
+      const currentInterval = counterRef.current.getFrameInterval();
+      if (Math.abs(actualIntervalMs - currentInterval) >= 5) {
+        counterRef.current.setFrameInterval(actualIntervalMs);
       }
-      lastFrameTimeRef.current = now;
+    }
+    lastFrameTimeRef.current = now;
 
-      counterRef.current.processFrame(pose);
-      const newCount = counterRef.current.getCount();
-      if (newCount !== prevCountRef.current) {
-        prevCountRef.current = newCount;
-        setCount(newCount);
-        playCountTick();
-      }
-    },
-    [],
-  );
+    counterRef.current.processFrame(pose);
+    const newCount = counterRef.current.getCount();
+    if (newCount !== prevCountRef.current) {
+      prevCountRef.current = newCount;
+      setCount(newCount);
+      playCountTick();
+    }
+  }, []);
 
   const start = useCallback(() => {
     if (isActiveRef.current) return; // 防止连击重入
@@ -177,7 +174,7 @@ export function useWorkout(exerciseType: ExerciseType) {
     pauseStartRef.current = null;
     pausedAccumRef.current = 0;
     setIsPaused(false);
-  }, []);
+  }, [targetDuration]);
 
   const stop = useCallback(async (): Promise<StopResult> => {
     stopActivity();
@@ -196,9 +193,7 @@ export function useWorkout(exerciseType: ExerciseType) {
       return { session: null, saved: false };
     }
 
-    const duration = startTimeRef.current
-      ? Math.round(getElapsedMs() / 1000)
-      : targetDuration;
+    const duration = startTimeRef.current ? Math.round(getElapsedMs() / 1000) : targetDuration;
 
     // 计算完时长后再清理暂停态，避免影响时长统计
     isPausedRef.current = false;
@@ -236,7 +231,7 @@ export function useWorkout(exerciseType: ExerciseType) {
 
     savePromiseRef.current = savePromise;
     return savePromise;
-  }, [exerciseType, mode, stopActivity, targetDuration]);
+  }, [exerciseType, getElapsedMs, mode, stopActivity, targetDuration]);
 
   const pause = useCallback(() => {
     if (!isActiveRef.current || isPausedRef.current) return;
@@ -255,12 +250,9 @@ export function useWorkout(exerciseType: ExerciseType) {
     setIsPaused(false);
   }, []);
 
-  const getFeedback = useCallback(
-    (pose: Pose) => {
-      return counterRef.current.getFeedback(pose);
-    },
-    [],
-  );
+  const getFeedback = useCallback((pose: Pose) => {
+    return counterRef.current.getFeedback(pose);
+  }, []);
 
   const switchMode = useCallback(
     (newMode: WorkoutMode) => {

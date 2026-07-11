@@ -489,7 +489,9 @@ export default function TeacherPage() {
                       })()}
                     </td>
                     <td>
-                      <strong>{PilotService.scoreSessionRecord(session, task).compositeScore}</strong>
+                      <strong>
+                        {PilotService.scoreSessionRecord(session, task).compositeScore}
+                      </strong>
                     </td>
                     <td>
                       {session.validCount}/{session.invalidCount}/{session.foulCount}

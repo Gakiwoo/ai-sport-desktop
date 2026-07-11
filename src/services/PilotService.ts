@@ -14,12 +14,7 @@ import {
   type TrainingTask,
 } from '../types';
 import { EXERCISE_NAMES } from '../constants/exerciseConfig';
-import {
-  type SpreadsheetRow,
-  createXlsxWorkbook,
-  escapeCsv,
-  toBlobPart,
-} from '../utils/xlsx';
+import { type SpreadsheetRow, createXlsxWorkbook, escapeCsv, toBlobPart } from '../utils/xlsx';
 import { scoreSession, type ScoringResult } from './scoring';
 import { createStorageAdapter } from './storage/createStorageAdapter';
 import type { IStorageAdapter } from './storage/IStorageAdapter';
@@ -454,6 +449,7 @@ class PilotService {
       foulCount: session.foulCount,
       confidence: session.confidence,
       targetCount: task?.targetCount,
+      targetCm: task?.targetCm,
     });
   }
 
