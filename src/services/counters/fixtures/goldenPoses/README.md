@@ -1,5 +1,7 @@
 # Golden Pose fixtures
 
+> 2026-07-11 复核：fixture 用于确定性回归和跨端逻辑保护，不计入真实视频数据集，也不能替代现场算法验证。
+
 JSON 描述「帧序列 → 期望计数/阶段」，供 `goldenPoseRegression.test.ts` 回归。
 
 ## 格式

@@ -2,7 +2,7 @@
 
 基于 **Tauri 2 + React 18 + TypeScript** 构建的 AI 运动计数桌面应用。通过摄像头实时捕捉人体骨骼关键点（MediaPipe Pose），结合卡尔曼滤波与状态机算法，自动识别并计数 6 种常见运动。
 
-> 当前状态（2026-07-10）：`npm run check` 全绿，24 个 Vitest files / 197 tests 通过，`npm run build` 通过。`npm run tauri:build:windows` 已在系统临时 Cargo target 中生成未签名 NSIS 安装器；签名、安装和卸载仍待验收。
+> 当前状态（2026-07-13 实测）：`npm run check`（ESLint + Prettier + 24 Vitest files / 197 tests）全绿，前端构建、Rust release check 和 0 vulnerability 审计通过。Windows CI 已产出 x64 EXE/NSIS，macOS CI 已产出 arm64 DMG；产物仍未签名，安装、卸载、升级和回滚待验收。系统级口径见[当前工程基线](../AI-Sport-System-当前工程基线-2026-07-13.md)。
 
 ## 技术栈
 
@@ -73,7 +73,7 @@ npm run tauri:build:windows
 npm run tauri build
 ```
 
-当前 `tauri.conf.json` 只配置 `nsis` 和 `dmg`，没有 MSI target。Windows 与 macOS 安装包必须分别在对应系统完成构建、安装和签名验收。
+当前 `tauri.conf.json` 只配置 `nsis` 和 `dmg`，没有 MSI target。Windows x64 与 macOS Apple Silicon 的未签名候选包已由对应平台构建成功；Intel macOS、代码签名、公证、安装和升级仍需单独验收。
 
 ### 生成更新签名密钥
 
@@ -188,12 +188,12 @@ scripts/                      # 辅助脚本
 - ✅ TypeScript strict 模式全程开启
 - ✅ 完善的单元测试覆盖（核心逻辑 + 算法 + 组件）
 - 校园试点教师端：班级/学生/任务 CRUD、`pilot-v1` 文件导入、成绩筛选、异常复核、CSV/XLSX
-- 前端生产资源可构建；Windows NSIS 与 macOS DMG 仍需对应平台的发布验收
+- 前端生产资源、Windows x64 EXE/NSIS 与 macOS arm64 DMG 已可重复构建；签名、安装、升级和回滚仍需发布验收
 - ✅ **自适应设备性能分级**：根据运行时推理耗时在 high/balanced/constrained 三档间自动调整
 - ✅ **Service Worker 离线缓存**：缓存模型资源，减少重复下载；实际加载时间取决于设备与缓存状态
 - ✅ **CDN 预连接优化**：dns-prefetch + preconnect 到 4 个 CDN 源
 - ✅ **推理超时保护**：`pose.send()` 500ms 超时；实际推理耗时需按目标硬件测量
-- ✅ **自建 CDN**：`gakiwoo.com/static/mediapipe/pose/` 提供模型资源；2026-07-10 已确认 lite 模型在线
+- ✅ **自建 CDN**：`gakiwoo.com/static/mediapipe/pose/` 提供模型资源；2026-07-11 已确认 lite 模型 HTTP 200
 - ✅ **帧间隔自适应**：ExerciseCounter 基类支持 frameIntervalMs，适配不同帧率设备
 
 ## macOS 构建注意事项

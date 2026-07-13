@@ -1,8 +1,8 @@
 # 系统架构文档 — AI 运动助手桌面版
 
-> 版本：1.0.0 | 更新日期：2026-07-10
+> 版本：1.0.0 | 更新日期：2026-07-13
 >
-> 当前验证边界：`npm run check` 全绿，197 项 Vitest 与前端生产构建通过；未签名 Windows NSIS 已产出，签名与安装/卸载仍待验收。
+> 当前验证边界：`npm run check`（ESLint + Prettier + 197 Vitest）全绿，前端生产构建、Rust release check 和 0 vulnerability 审计通过；Windows x64 EXE/NSIS 与 macOS arm64 DMG 已由绿色 CI 产出。签名、公证、安装、升级和回滚仍待验收。
 
 ## 一、总体架构
 
@@ -226,7 +226,7 @@ cargo build --release
 | 算法测试  | Vitest                  | 卡尔曼滤波、计数器状态机、峰值检测    |
 | 配置测试  | Vitest                  | exerciseConfig 常量正确性             |
 
-2026-07-10 基线：24 个测试文件、197 项测试通过，`npm run check` 的 ESLint、Prettier 和 Vitest 均通过。
+2026-07-13 基线：24 个测试文件、197 项测试通过，`npm run check` 的 ESLint、Prettier 和 Vitest 均通过；Windows/macOS CI 也执行 TypeScript、前端构建和原生打包。
 
 ## 九、已知限制
 
@@ -234,6 +234,6 @@ cargo build --release
 2. **多摄像头**：仅支持默认摄像头，不支持热切换
 3. **运动类型扩展**：需新增 Counter 子类 + exerciseConfig 注册
 4. **离线模型**：需预先运行 `npm run setup:mediapipe` 下载
-5. **构建环境**：未签名 NSIS 已通过临时 target 构建；正式发布仍需签名、安装/卸载和更新验证
+5. **构建环境**：Windows x64 EXE/NSIS 与 macOS arm64 DMG 已通过本机/CI 构建；Windows debug Cargo target 可能受本机安全策略阻止，应使用临时 release target。正式发布仍需签名、公证、安装、升级和回滚验证
 6. **本地试点**：`pilot-v1` 真机跨端往返尚未完成人工验收
 7. **云端能力**：Desktop 未接入 Sync/Pilot API，当前以本地文件包为准
