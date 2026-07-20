@@ -48,8 +48,7 @@
       "endpoints": [
         "https://github.com/Gakiwoo/ai-sport-desktop/releases/latest/download/latest.json"
       ],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEJBQUU5MEQxMEQxQjFBQTkKUldTcEdoc04wWkN1dXE1ZkhyNFRXZFk4MWF0Zk5BQWlrZEFHZ282TzQyN2xxaS9oV0dJUFdaajcK",
-      "note": "此公钥为示例占位，请运行 npm run tauri:signer 生成真实密钥对后替换"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM2ODUxNkNCOTJFQjE3NjUKUldSbEYrdVN5eGFGTmxPY1Z0WnpuQlV6OGFPV1g5TTltTHdqMjZ3Y0Yxc0YrZmtxSTAzaUhpOHoK"
     }
   }
 }

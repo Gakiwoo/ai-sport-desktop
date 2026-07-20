@@ -40,9 +40,10 @@ build-log.txt
 # Test coverage
 coverage/
 
-# Tauri updater private key (DO NOT COMMIT)
+# Tauri updater signing keys — private key MUST NOT be committed
+keys/tauri-updater
+!keys/tauri-updater.pub
 src-tauri/updater.key
-src-tauri/updater.key.pub
 
 # Temporary / cache files
 *.tmp
