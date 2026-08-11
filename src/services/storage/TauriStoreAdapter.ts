@@ -96,8 +96,11 @@ export class TauriStoreAdapter implements IStorageAdapter {
         await this.store.delete(key);
       }
       await this.store.save();
-    } catch {
-      // silent
+    } catch (err) {
+      ErrorReporter.captureWarning('TauriStore clear() 失败', {
+        source: 'TauriStoreAdapter',
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 }

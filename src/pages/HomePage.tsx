@@ -35,6 +35,34 @@ export default function HomePage() {
           <button
             type="button"
             className="home-nav-btn"
+            onClick={() => navigate('/reports')}
+            title="训练报告"
+            aria-label="训练报告"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect
+                x="5"
+                y="4"
+                width="14"
+                height="17"
+                rx="2"
+                stroke="currentColor"
+                strokeWidth="2"
+              />
+              <path
+                d="M9 3.5h6M9 12l2.2-2.5 1.8 2 2-3"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path d="M9 17h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <span>报告</span>
+          </button>
+          <button
+            type="button"
+            className="home-nav-btn"
             onClick={() => navigate('/history')}
             title="训练历史"
             aria-label="训练历史"

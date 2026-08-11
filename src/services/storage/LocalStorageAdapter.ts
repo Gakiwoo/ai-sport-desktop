@@ -13,10 +13,18 @@ export class LocalStorageAdapter implements IStorageAdapter {
   async set(key: string, value: string): Promise<void> {
     try {
       localStorage.setItem(key, value);
-    } catch {
+    } catch (firstError) {
       // 存储满时尝试清理并重试
       this.emergencyCleanup();
-      localStorage.setItem(key, value);
+      try {
+        localStorage.setItem(key, value);
+      } catch {
+        throw new Error(
+          `localStorage 写入失败（key="${key}"），紧急清理后仍无法写入: ${
+            firstError instanceof Error ? firstError.message : String(firstError)
+          }`,
+        );
+      }
     }
   }
 

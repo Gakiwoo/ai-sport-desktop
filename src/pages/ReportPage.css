@@ -1,0 +1,615 @@
+/* ============================================================
+   ReportPage — 教师端班级训练报告
+   主题变量来自 global.css（--bg / --bg-card / --text-* / --border）
+   ============================================================ */
+
+.report-page {
+  background: var(--bg);
+}
+
+/* 圆形返回按钮（HistoryPage.css 中同名类的兜底，确保懒加载时仍有样式） */
+.report-page .header-back-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease;
+  flex-shrink: 0;
+}
+
+.report-page .header-back-btn:hover {
+  background: rgba(128, 128, 128, 0.12);
+}
+
+.report-page .header-back-btn:active {
+  transform: scale(0.9);
+}
+
+/* ---- 控制区：班级选择 + 项目筛选 ---- */
+.report-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px 6px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.report-select-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.report-select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 14px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--text-secondary);
+  border-bottom: 2px solid var(--text-secondary);
+  transform: rotate(45deg) translateY(-2px);
+  pointer-events: none;
+}
+
+.report-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 9px 38px 9px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  max-width: 240px;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.report-select:hover {
+  border-color: var(--primary);
+}
+
+.report-select:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+.report-select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* 项目筛选胶囊（沿用时间范围选择器的视觉语言） */
+.report-exercise-filter {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  flex: 1;
+  min-width: 0;
+  scrollbar-width: none;
+  padding: 2px;
+}
+
+.report-exercise-filter::-webkit-scrollbar {
+  display: none;
+}
+
+.report-filter-btn {
+  padding: 7px 15px;
+  border-radius: 16px;
+  border: none;
+  background: rgba(128, 128, 128, 0.1);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    transform 0.12s;
+}
+
+.report-filter-btn:hover {
+  background: rgba(128, 128, 128, 0.18);
+}
+
+.report-filter-btn:active {
+  transform: scale(0.95);
+}
+
+.report-filter-btn--active {
+  background: rgba(0, 122, 255, 0.12);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.report-filter-btn--active:hover {
+  background: rgba(0, 122, 255, 0.18);
+}
+
+/* ---- 加载 / 错误空状态 ---- */
+.report-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.report-empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.report-loading-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: reportPulse 1s ease-in-out infinite;
+}
+
+@keyframes reportPulse {
+  0%,
+  100% {
+    transform: scale(0.7);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+/* ---- 统计卡片网格 ---- */
+.report-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.report-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 18px 14px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+  animation: reportRise 0.4s ease-out backwards;
+}
+
+.report-card:nth-child(1) {
+  animation-delay: 0.03s;
+}
+.report-card:nth-child(2) {
+  animation-delay: 0.09s;
+}
+.report-card:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.report-card:nth-child(4) {
+  animation-delay: 0.21s;
+}
+
+@keyframes reportRise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.report-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.1);
+}
+
+.report-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.report-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.report-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  font-size: 15px;
+  background: rgba(0, 122, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.report-card-value {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.05;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.report-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  min-height: 20px;
+}
+
+.report-card-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-card-trend--up {
+  background: rgba(52, 199, 89, 0.14);
+  color: #248a3d;
+}
+
+.report-card-trend--down {
+  background: rgba(255, 59, 48, 0.12);
+  color: #d70015;
+}
+
+.report-card-trend--flat {
+  background: rgba(128, 128, 128, 0.12);
+  color: var(--text-secondary);
+}
+
+.report-card-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- 图表区 ---- */
+.report-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.report-chart {
+  margin-bottom: 0;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+}
+
+.report-chart .card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.report-chart-body {
+  flex: 1;
+  min-height: 220px;
+}
+
+.report-chart-empty {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 48px 0;
+  font-size: 15px;
+}
+
+.report-chart-note {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: rgba(128, 128, 128, 0.1);
+  padding: 3px 10px;
+  border-radius: 10px;
+}
+
+.report-progress-card {
+  margin-top: 16px;
+}
+
+.report-student-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  background: rgba(0, 122, 255, 0.1);
+  border-radius: 10px;
+  padding: 3px 10px;
+}
+
+/* ---- 学生排名列表 ---- */
+.report-student-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 340px;
+  overflow-y: auto;
+  margin: 0 -6px;
+  padding: 0 6px;
+  scrollbar-width: thin;
+}
+
+.report-student-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.report-student-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 2px;
+}
+
+.report-student-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background 0.15s,
+    transform 0.12s;
+}
+
+.report-student-item:hover:not(:disabled) {
+  background: rgba(128, 128, 128, 0.1);
+}
+
+.report-student-item:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+.report-student-item:disabled {
+  cursor: default;
+}
+
+.report-student-item--active {
+  background: rgba(0, 122, 255, 0.1);
+  box-shadow: inset 0 0 0 1.5px rgba(0, 122, 255, 0.45);
+}
+
+.report-student-item--active:hover:not(:disabled) {
+  background: rgba(0, 122, 255, 0.14);
+}
+
+.report-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  flex-shrink: 0;
+  background: rgba(128, 128, 128, 0.14);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.report-rank-badge--gold {
+  background: linear-gradient(135deg, #ffd60a 0%, #ffb340 100%);
+  color: #7a4c00;
+}
+
+.report-rank-badge--silver {
+  background: linear-gradient(135deg, #e5e5ea 0%, #aeaeb2 100%);
+  color: #48484a;
+}
+
+.report-rank-badge--bronze {
+  background: linear-gradient(135deg, #ffb58a 0%, #d67c3f 100%);
+  color: #5c3310;
+}
+
+.report-student-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-student-sessions {
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-student-score {
+  font-size: 15px;
+  font-weight: 800;
+  min-width: 44px;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.report-rank-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 48px;
+  flex-shrink: 0;
+}
+
+.report-rank-trend--improving {
+  color: #248a3d;
+}
+
+.report-rank-trend--declining {
+  color: #d70015;
+}
+
+.report-rank-trend--stable {
+  color: var(--text-secondary);
+}
+
+/* ---- 响应式（tauri 最小宽度 900px，兼顾更窄窗口） ---- */
+@media (max-width: 1080px) {
+  .report-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 960px) {
+  .report-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ---- Dark Mode（手动切换，global.css 的 data-theme 机制） ---- */
+[data-theme='dark'] .report-card {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.24);
+}
+
+[data-theme='dark'] .report-card:hover {
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark'] .report-card-trend--up {
+  background: rgba(48, 209, 88, 0.16);
+  color: #30d158;
+}
+
+[data-theme='dark'] .report-card-trend--down {
+  background: rgba(255, 69, 58, 0.16);
+  color: #ff453a;
+}
+
+[data-theme='dark'] .report-filter-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #98989d;
+}
+
+[data-theme='dark'] .report-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+[data-theme='dark'] .report-filter-btn--active {
+  background: rgba(10, 132, 255, 0.2);
+  color: #5ac8fa;
+}
+
+[data-theme='dark'] .report-student-item:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .report-student-item--active {
+  background: rgba(10, 132, 255, 0.16);
+  box-shadow: inset 0 0 0 1.5px rgba(10, 132, 255, 0.5);
+}
+
+[data-theme='dark'] .report-student-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme='dark'] .report-rank-trend--improving {
+  color: #30d158;
+}
+
+[data-theme='dark'] .report-rank-trend--declining {
+  color: #ff453a;
+}
+
+[data-theme='dark'] .report-student-chip {
+  background: rgba(10, 132, 255, 0.18);
+  color: #5ac8fa;
+}
+
+/* 兜底：未设置 data-theme 时跟随系统（与 global.css 保持一致） */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .report-card {
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.24);
+  }
+
+  :root:not([data-theme]) .report-card:hover {
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+  }
+
+  :root:not([data-theme]) .report-card-trend--up {
+    background: rgba(48, 209, 88, 0.16);
+    color: #30d158;
+  }
+
+  :root:not([data-theme]) .report-card-trend--down {
+    background: rgba(255, 69, 58, 0.16);
+    color: #ff453a;
+  }
+
+  :root:not([data-theme]) .report-filter-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #98989d;
+  }
+
+  :root:not([data-theme]) .report-filter-btn--active {
+    background: rgba(10, 132, 255, 0.2);
+    color: #5ac8fa;
+  }
+
+  :root:not([data-theme]) .report-rank-trend--improving {
+    color: #30d158;
+  }
+
+  :root:not([data-theme]) .report-rank-trend--declining {
+    color: #ff453a;
+  }
+}

@@ -174,3 +174,72 @@ export interface PilotHistoryFilter {
   taskId?: string;
   exerciseType?: ExerciseType | 'all';
 }
+
+// ─── API 响应类型 ───
+
+export interface WorkoutSyncResponse {
+  synced: string[];
+  conflicts: string[];
+}
+
+export interface WorkoutPullResponse {
+  records: WorkoutSession[];
+  total: number;
+}
+
+export interface ExerciseStatsItem {
+  exerciseType: ExerciseType;
+  count: number;
+  totalDuration: number;
+}
+
+export interface WorkoutStatsResponse {
+  total: number;
+  byExercise: ExerciseStatsItem[];
+}
+
+export interface TaskResultRecord {
+  sessionId: string;
+  studentId: string;
+  studentName: string;
+  score: number;
+  rating: string;
+  compositeScore: number;
+  passed: boolean;
+}
+
+export interface TaskResultsResponse {
+  taskId: string;
+  results: TaskResultRecord[];
+}
+
+export interface ClassSummaryResponse {
+  classId: string;
+  className: string;
+  studentCount: number;
+  averageScore: number;
+  passRate: number;
+  exerciseBreakdown: Array<{ exerciseType: ExerciseType; count: number; avgScore: number }>;
+}
+
+export interface SchoolSummaryResponse {
+  schoolId: string;
+  schoolName: string;
+  classCount: number;
+  studentCount: number;
+  averageScore: number;
+  passRate: number;
+}
+
+export interface StudentProgressResponse {
+  studentId: string;
+  studentName: string;
+  sessions: Array<{
+    date: string;
+    exerciseType: ExerciseType;
+    score: number;
+    compositeScore: number;
+    rating: string;
+  }>;
+  trend: 'improving' | 'stable' | 'declining';
+}

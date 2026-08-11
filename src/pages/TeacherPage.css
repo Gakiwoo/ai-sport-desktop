@@ -329,3 +329,492 @@
     grid-template-columns: repeat(2, minmax(120px, 1fr));
   }
 }
+
+/* ===== CloudConnect ===== */
+
+.cloud-connect {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cloud-connect-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cloud-connect-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cloud-connect-dot--connected {
+  background: #34c759;
+}
+
+.cloud-connect-dot--disconnected {
+  background: #ff3b30;
+}
+
+.cloud-connect-dot--connecting {
+  background: #ff9500;
+  animation: cloud-pulse 1s infinite;
+}
+
+@keyframes cloud-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.cloud-connect-label {
+  font-size: 12px;
+  color: var(--text-secondary, #6b7280);
+  white-space: nowrap;
+}
+
+.cloud-connect-user {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cloud-connect-username {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #1c1c1e);
+}
+
+.cloud-connect-role {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #e8f4fd;
+  color: #0a84ff;
+  font-weight: 600;
+}
+
+.cloud-connect-btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  background: #0a84ff;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cloud-connect-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.cloud-connect-btn--disconnect {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.cloud-connect-btn--cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.cloud-connect-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cloud-connect-input {
+  min-height: 30px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0 8px;
+  font-size: 12px;
+  background: var(--bg-input, #fff);
+  color: var(--text-primary, #1c1c1e);
+  width: 110px;
+}
+
+.cloud-connect-form-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.cloud-connect-error {
+  width: 100%;
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #ff3b30;
+}
+
+/* ===== CloudSyncPanel ===== */
+
+.cloud-sync-panel {
+  margin: 0 28px 10px;
+  background: var(--bg-panel, #fff);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+}
+
+.cloud-sync-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: 0;
+  background: none;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #1c1c1e);
+  text-align: left;
+}
+
+.cloud-sync-toggle-icon {
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.cloud-sync-time {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+.cloud-sync-body {
+  padding: 0 14px 14px;
+}
+
+.cloud-sync-hint {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.cloud-sync-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cloud-sync-btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  background: #0a84ff;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cloud-sync-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.cloud-sync-btn--secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.cloud-sync-auto {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-secondary, #6b7280);
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+.cloud-sync-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.cloud-sync-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #0a84ff;
+  border-radius: 50%;
+  animation: cloud-spin 0.7s linear infinite;
+}
+
+@keyframes cloud-spin {
+  to { transform: rotate(360deg); }
+}
+
+.cloud-sync-result {
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f766e;
+}
+
+.cloud-sync-error {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #ff3b30;
+}
+
+/* ===== BatchImportModal ===== */
+
+.batch-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.batch-modal {
+  width: 560px;
+  max-width: 92vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-panel, #fff);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.batch-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.batch-modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.batch-modal-close {
+  border: 0;
+  background: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #6b7280;
+  line-height: 1;
+  padding: 4px;
+}
+
+.batch-modal-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.batch-modal-tab {
+  border: 0;
+  background: none;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.batch-modal-tab--active {
+  color: #0a84ff;
+  border-bottom-color: #0a84ff;
+}
+
+.batch-modal-body {
+  flex: 1;
+  overflow: auto;
+  padding: 16px 20px;
+}
+
+.batch-modal-message {
+  margin: 0;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  border-top: 1px solid #e5e7eb;
+}
+
+.batch-modal-message--success {
+  color: #0f766e;
+  background: #ecfdf5;
+}
+
+.batch-modal-message--error {
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+/* File import tab */
+
+.batch-drop-zone {
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 28px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.batch-drop-zone:hover,
+.batch-drop-zone--active {
+  border-color: #0a84ff;
+  background: #f0f7ff;
+}
+
+.batch-drop-text {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: var(--text-primary, #374151);
+}
+
+.batch-drop-hint {
+  margin: 0;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.batch-preview {
+  margin-top: 12px;
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.batch-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.batch-preview-table th,
+.batch-preview-table td {
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.batch-preview-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #4b5563;
+  position: sticky;
+  top: 0;
+}
+
+.batch-preview-more {
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.batch-import-btn {
+  margin-top: 12px;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 18px;
+  background: #0a84ff;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.batch-import-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.batch-import-btn--secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* Cloud import tab */
+
+.batch-cloud-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.batch-link-btn {
+  border: 0;
+  background: none;
+  color: #0a84ff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 8px;
+}
+
+.batch-cloud-list {
+  max-height: 240px;
+  overflow: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.batch-cloud-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.batch-cloud-item:hover {
+  background: #f9fafb;
+}
+
+.batch-cloud-item small {
+  color: #6b7280;
+  margin-left: auto;
+}
+
+/* Batch import button in student column */
+
+.teacher-batch-import-btn {
+  min-height: 36px;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.teacher-batch-import-btn:hover {
+  background: #e5e7eb;
+}

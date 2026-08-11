@@ -2,7 +2,7 @@
 
 基于 **Tauri 2 + React 18 + TypeScript** 构建的 AI 运动计数桌面应用。通过摄像头实时捕捉人体骨骼关键点（MediaPipe Pose），结合卡尔曼滤波与状态机算法，自动识别并计数 6 种常见运动。
 
-> 当前状态（2026-07-13 实测）：`npm run check`（ESLint + Prettier + 24 Vitest files / 197 tests）全绿，前端构建、Rust release check 和 0 vulnerability 审计通过。Windows CI 已产出 x64 EXE/NSIS，macOS CI 已产出 arm64 DMG；产物仍未签名，安装、卸载、升级和回滚待验收。系统级口径见[当前工程基线](../AI-Sport-System-当前工程基线-2026-07-13.md)。
+> 当前状态（2026-07-24 更新）：`npm run check`（ESLint + Prettier + 24 Vitest files / 197 tests）全绿，前端构建、Rust release check 和 0 vulnerability 审计通过。Windows CI 已产出 x64 EXE/NSIS，macOS CI 已产出 arm64 DMG。2026-07-20 已配置真实 Ed25519 updater 签名密钥（非占位符）。产物仍未做 Authenticode/notarization 签名，安装、卸载、升级和回滚待验收。系统级口径见[当前工程基线](../AI-Sport-System-当前工程基线-2026-07-24.md)。
 
 ## 技术栈
 
@@ -114,10 +114,16 @@ src/
 │   ├── ErrorBoundary.tsx     #   全局错误边界
 │   ├── ExerciseIllustration.tsx  # 运动插画（SVG）
 │   ├── ThemeToggle.tsx       #   主题切换按钮
-│   └── UpdateNotification.tsx    # 自动更新通知
+│   ├── UpdateNotification.tsx    # 自动更新通知
+│   └── workout/              #   训练页子组件
+│       ├── NotificationBar.tsx   #   通知栏
+│       ├── ResultPanel.tsx       #   结果面板
+│       ├── StopConfirmModal.tsx  #   停止确认弹窗
+│       └── TargetModal.tsx       #   目标设置弹窗
 ├── hooks/
 │   ├── useWorkout.ts         #   训练状态管理（核心 Hook）
-│   └── useTheme.ts           #   主题管理（light/dark/system）
+│   ├── useTheme.ts           #   主题管理（light/dark/system）
+│   └── useNotification.ts    #   通知管理（训练中消息推送）
 ├── services/                 # 业务服务层
 │   ├── counters/             #   运动计数算法（可插拔扩展）
 │   │   ├── JumpRopeCounter.ts    # 跳绳（4 状态机 + 手腕旋转）
@@ -141,9 +147,13 @@ src/
 │   ├── PilotService.ts      #   pilot-v1、班级/学生/任务、复核、CSV/XLSX
 │   ├── SoundService.ts      #   Web Audio API 音效合成
 │   ├── ErrorReporter.ts     #   错误上报（本地日志 + 远程端点）
-│   └── UpdaterService.ts    #   自动更新服务
+│   ├── UpdaterService.ts    #   自动更新服务
+│   ├── PerformanceMonitor.ts #   性能监控（FPS、推理耗时、设备分级）
+│   └── scoring.ts            #   评分引擎（同构 scoreSession 纯函数）
 ├── types/                    # TypeScript 类型定义
 ├── constants/                # 运动配置常量（名称/颜色/关键点）
+├── utils/
+│   └── xlsx.ts               #   XLSX/CSV 导出工具
 └── styles/                   # 全局 CSS（自定义属性 + 深色模式）
 
 src-tauri/                    # Rust 后端（最小化）

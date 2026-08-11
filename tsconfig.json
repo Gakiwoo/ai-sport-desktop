@@ -18,7 +18,9 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@ai-sport/core": ["../packages/ai-sport-core/src"],
+      "@ai-sport/core/*": ["../packages/ai-sport-core/src/*"]
     }
   },
   "include": ["src"]

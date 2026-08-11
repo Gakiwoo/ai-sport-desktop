@@ -1,29 +1,33 @@
 # 系统架构文档 — AI 运动助手桌面版
 
-> 版本：1.0.0 | 更新日期：2026-07-13
+> 版本：1.0.0 | 更新日期：2026-07-24
 >
-> 当前验证边界：`npm run check`（ESLint + Prettier + 197 Vitest）全绿，前端生产构建、Rust release check 和 0 vulnerability 审计通过；Windows x64 EXE/NSIS 与 macOS arm64 DMG 已由绿色 CI 产出。签名、公证、安装、升级和回滚仍待验收。
+> 当前验证边界：`npm run check`（ESLint + Prettier + 197 Vitest）全绿，前端生产构建、Rust release check 和 0 vulnerability 审计通过；Windows x64 EXE/NSIS 与 macOS arm64 DMG 已由绿色 CI 产出。Updater 已配置真实 Ed25519 签名密钥。Authenticode 签名、公证、安装、升级和回滚仍待验收。
 
 ## 一、总体架构
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│                    Presentation Layer                     │
-│  ┌─────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐ │
-│  │HomePage │  │WorkoutPg │  │HistoryPg │  │TeacherPg│ │
-│  │   (/)   │  │(/workout)│  │(/history)│  │(/teacher)│ │
-│  └────┬────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘ │
-├───────┴────────────┴──────────────┴──────────────┴───────┤
-│                     Business Logic                        │
-│  ┌──────────┐  ┌──────────┐  ┌──────────────────────┐   │
-│  │useWorkout│  │CameraView│  │  ExerciseCounter     │   │
-│  │   Hook   │  │Component │  │  (Abstract Base)     │   │
-│  └────┬─────┘  └────┬─────┘  └──────────┬───────────┘   │
-│       │              │                    │               │
-│  ┌────┴──────┐  ┌────┴──────────┐  ┌─────┴──────────┐  │
-│  │ SoundSvc  │  │PoseDetectSvc  │  │ 6x Counters    │  │
-│  │ StorageSvc│  │MediaPipeLoader│  │ + PilotService │  │
-│  └───────────┘  └───────────────┘  └────────────────┘  │
+┌───────────────────────────────────────────────────────────────────┐
+│                       Presentation Layer                           │
+│  ┌─────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐ │
+│  │HomePage │  │WorkoutPg │  │HistoryPg │  │TeacherPg│  │AnalyticsPg  │ │
+│  │   (/)   │  │(/workout)│  │(/history)│  │(/teacher)│  │(/analytics) │ │
+│  └────┬────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘  └──────┬───────┘ │
+├───────┴────────────┴──────────────┴──────────────┴───────────────┴───────┤
+│                         Business Logic                                   │
+│  ┌──────────┐  ┌──────────┐  ┌──────────────────────┐                   │
+│  │useWorkout│  │CameraView│  │  ExerciseCounter     │                   │
+│  │   Hook   │  │Component │  │  (Abstract Base)     │                   │
+│  └────┬─────┘  └────┬─────┘  └──────────┬───────────┘                   │
+│       │              │                    │                               │
+│  ┌────┴──────┐  ┌────┴──────────┐  ┌─────┴──────────┐                   │
+│  │ SoundSvc  │  │PoseDetectSvc  │  │ 6x Counters    │                   │
+│  │ StorageSvc│  │MediaPipeLoader│  │ + PilotService │                   │
+│  └───────────┘  └───────────────┘  └────────────────┘                   │
+│  ┌────────────────────┐  ┌────────────────────┐                         │
+│  │ PerformanceMonitor │  │ scoring            │                         │
+│  │ (FPS/推理/设备分级)│  │ (scoreSession)     │                         │
+│  └────────────────────┘  └────────────────────┘                         │
 ├─────────────────────────────────────────────────────────┤
 │                    Service Layer                          │
 │  ┌──────────┐  ┌──────────┐  ┌──────────────────────┐   │
@@ -109,6 +113,10 @@ TeacherPage
             <CameraOverlay />       ← 覆盖层（状态切换）
             <SkeletonRenderer />    ← 骨骼绘制（Canvas）
           </CameraView>
+          <NotificationBar />       ← 通知栏
+          <ResultPanel />           ← 结果面板
+          <StopConfirmModal />      ← 停止确认弹窗
+          <TargetModal />           ← 目标设置弹窗
         </Route>
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
@@ -128,6 +136,7 @@ TeacherPage
 | **useWorkout Hook**     | 训练会话状态         | isActive, count, mode, targetCount/Duration, timeUp |
 | **useRef 模式**         | 闭包陷阱解决         | isActiveRef, stopRef, cameraStateRef 等             |
 | **useTheme Hook**       | 主题状态             | light/dark/system，CSS 变量驱动                     |
+| **useNotification Hook** | 通知状态            | 训练中消息推送与展示                                |
 | **StorageService 单例** | 持久化状态           | 内存缓存 + 适配器                                   |
 | **PilotService 单例**   | 校园实体、成绩、复核 | `pilot-v1` + 存储适配器                             |
 | **Props 传递**          | 跨组件通信           | CameraView → onPoseDetected → useWorkout            |
@@ -201,7 +210,8 @@ tsc --noEmit (类型检查)
     ├── @vitejs/plugin-react (JSX 转换)
     ├── manualChunks:
     │   ├── vendor-react (React/ReactDOM/Router)
-    │   └── vendor-recharts (Recharts)
+    │   ├── vendor-recharts (Recharts/d3/victory)
+    │   └── vendor (其他 node_modules)
     └── dist/ (约 200KB gzip)
 ```
 
@@ -225,8 +235,9 @@ cargo build --release
 | 服务测试  | Vitest                  | Storage/MediaPipe/Sound/PoseDetection |
 | 算法测试  | Vitest                  | 卡尔曼滤波、计数器状态机、峰值检测    |
 | 配置测试  | Vitest                  | exerciseConfig 常量正确性             |
+| 工具测试  | Vitest                  | XLSX/CSV 导出逻辑（src/utils/xlsx.ts）|
 
-2026-07-13 基线：24 个测试文件、197 项测试通过，`npm run check` 的 ESLint、Prettier 和 Vitest 均通过；Windows/macOS CI 也执行 TypeScript、前端构建和原生打包。
+2026-07-24 基线：24 个测试文件、197 项测试通过，`npm run check` 的 ESLint、Prettier 和 Vitest 均通过；Windows/macOS CI 也执行 TypeScript、前端构建和原生打包。
 
 ## 九、已知限制
 

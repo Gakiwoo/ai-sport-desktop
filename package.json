@@ -22,6 +22,7 @@
     "check": "npm run lint && npm run format:check && npm run test"
   },
   "dependencies": {
+    "@ai-sport/core": "*",
     "@tauri-apps/plugin-store": "^2.4.3",
     "@tauri-apps/plugin-updater": "^2.10.1",
     "react": "^18.3.1",

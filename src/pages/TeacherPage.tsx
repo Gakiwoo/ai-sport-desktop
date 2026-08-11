@@ -5,6 +5,10 @@ import PilotService, { type PilotState } from '../services/PilotService';
 import type { ExerciseType, PilotHistoryFilter, ReviewStatus } from '../types';
 import './TeacherPage.css';
 import ErrorReporter from '../services/ErrorReporter';
+import CloudConnect from '../components/CloudConnect';
+import BatchImportModal from '../components/BatchImportModal';
+import CloudSyncPanel from '../components/CloudSyncPanel';
+import { useApi } from '../hooks/useApi';
 
 const ALL_EXERCISES: Array<{ value: ExerciseType | 'all'; label: string }> = [
   { value: 'all', label: '全部项目' },
@@ -27,6 +31,8 @@ export default function TeacherPage() {
     targetCount: '60',
     targetDurationSec: '60',
   });
+  const [batchImportOpen, setBatchImportOpen] = useState(false);
+  const { connected } = useApi();
 
   useEffect(() => {
     setState(PilotService.load());
@@ -186,6 +192,7 @@ export default function TeacherPage() {
           <p>班级、学生、任务、成绩复核</p>
         </div>
         <div className="teacher-actions">
+          <CloudConnect onConnected={() => setState(PilotService.load())} />
           <button type="button" onClick={createDemoClass}>
             初始化
           </button>
@@ -204,6 +211,8 @@ export default function TeacherPage() {
           </button>
         </div>
       </header>
+
+      <CloudSyncPanel connected={connected} />
 
       <main className="teacher-layout">
         <section className="teacher-panel teacher-import">
@@ -295,6 +304,13 @@ export default function TeacherPage() {
             />
             <button type="button" onClick={addStudent}>
               保存学生
+            </button>
+            <button
+              type="button"
+              className="teacher-batch-import-btn"
+              onClick={() => setBatchImportOpen(true)}
+            >
+              批量导入
             </button>
             <EntityList
               items={state.students.map((item) => ({
@@ -466,6 +482,7 @@ export default function TeacherPage() {
                 const classroom = state.classes.find((item) => item.id === session.classId);
                 const task = state.tasks.find((item) => item.id === session.taskId);
                 const review = state.reviews.find((item) => item.sessionRecordId === session.id);
+                const scoring = PilotService.scoreSessionRecord(session, task);
                 return (
                   <tr key={session.id}>
                     <td>{student?.name || session.studentId || '-'}</td>
@@ -478,20 +495,13 @@ export default function TeacherPage() {
                       <small>{session.durationSec}s</small>
                     </td>
                     <td>
-                      {(() => {
-                        const scoring = PilotService.scoreSessionRecord(session, task);
-                        return (
-                          <span className={`rating-badge rating-badge--${scoring.rating}`}>
-                            {scoring.ratingLabel}
-                            {!scoring.passed && <small> · 未达标</small>}
-                          </span>
-                        );
-                      })()}
+                      <span className={`rating-badge rating-badge--${scoring.rating}`}>
+                        {scoring.ratingLabel}
+                        {!scoring.passed && <small> · 未达标</small>}
+                      </span>
                     </td>
                     <td>
-                      <strong>
-                        {PilotService.scoreSessionRecord(session, task).compositeScore}
-                      </strong>
+                      <strong>{scoring.compositeScore}</strong>
                     </td>
                     <td>
                       {session.validCount}/{session.invalidCount}/{session.foulCount}
@@ -543,6 +553,14 @@ export default function TeacherPage() {
           </table>
         </section>
       </main>
+
+      <BatchImportModal
+        isOpen={batchImportOpen}
+        onClose={() => setBatchImportOpen(false)}
+        schoolId={state.schools[0]?.id ?? ''}
+        classId={state.classes[0]?.id ?? ''}
+        onImportComplete={() => setState(PilotService.load())}
+      />
     </div>
   );
 }

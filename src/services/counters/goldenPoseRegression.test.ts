@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
-// @ts-expect-error - Vitest 提供 Node 运行时，Desktop tsconfig 未引入 @types/node
 import { writeFileSync } from 'fs';
-// @ts-expect-error - Vitest 提供 Node 运行时，Desktop tsconfig 未引入 @types/node
 import path from 'path';
 
 declare const process: {
