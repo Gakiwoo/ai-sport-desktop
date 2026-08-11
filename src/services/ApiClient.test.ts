@@ -100,7 +100,15 @@ describe('request() 方法', () => {
     const client = new ApiClient();
     client.setTokens({ accessToken: 'my-token', refreshToken: 'r' });
 
-    const fetchMock = vi.fn().mockReturnValue(mockFetchResponse({ id: 1, username: 'u', email: 'e', role: 'admin', display_name: 'd' }));
+    const fetchMock = vi.fn().mockReturnValue(
+      mockFetchResponse({
+        id: 1,
+        username: 'u',
+        email: 'e',
+        role: 'admin',
+        display_name: 'd',
+      }),
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     await client.getProfile();
@@ -120,7 +128,9 @@ describe('request() 方法', () => {
     const client = new ApiClient();
     // 不设置 token
 
-    const fetchMock = vi.fn().mockReturnValue(mockFetchResponse({ id: 1, username: 'u', role: 'user' }));
+    const fetchMock = vi
+      .fn()
+      .mockReturnValue(mockFetchResponse({ id: 1, username: 'u', role: 'user' }));
     vi.stubGlobal('fetch', fetchMock);
 
     await client.register('user', 'pass');
@@ -132,7 +142,10 @@ describe('request() 方法', () => {
 
   it('7. 非 2xx 响应抛出 ApiRequestError', async () => {
     const client = new ApiClient();
-    vi.stubGlobal('fetch', vi.fn().mockReturnValue(mockFetchError(400, 'Bad Request', 'VALIDATION_ERROR')));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockReturnValue(mockFetchError(400, 'Bad Request', 'VALIDATION_ERROR')),
+    );
 
     try {
       await client.getProfile();
@@ -202,9 +215,13 @@ describe('JWT 刷新', () => {
       // 第一次调用 getProfile → 401
       .mockReturnValueOnce(mockFetchError(401, 'Unauthorized'))
       // 第二次调用 refresh → 成功
-      .mockReturnValueOnce(mockFetchResponse({ accessToken: 'new-access', refreshToken: 'new-refresh' }))
+      .mockReturnValueOnce(
+        mockFetchResponse({ accessToken: 'new-access', refreshToken: 'new-refresh' }),
+      )
       // 第三次调用 getProfile 重试 → 成功
-      .mockReturnValueOnce(mockFetchResponse({ id: 1, username: 'u', email: 'e', role: 'r', display_name: 'd' }));
+      .mockReturnValueOnce(
+        mockFetchResponse({ id: 1, username: 'u', email: 'e', role: 'r', display_name: 'd' }),
+      );
     vi.stubGlobal('fetch', fetchMock);
 
     const result = await client.getProfile();
@@ -222,8 +239,12 @@ describe('JWT 刷新', () => {
 
     const fetchMock = vi.fn()
       .mockReturnValueOnce(mockFetchError(401, 'Unauthorized'))
-      .mockReturnValueOnce(mockFetchResponse({ accessToken: 'new-a', refreshToken: 'new-r' }))
-      .mockReturnValueOnce(mockFetchResponse({ id: 1, username: 'u', email: 'e', role: 'r', display_name: 'd' }));
+      .mockReturnValueOnce(
+        mockFetchResponse({ accessToken: 'new-a', refreshToken: 'new-r' }),
+      )
+      .mockReturnValueOnce(
+        mockFetchResponse({ id: 1, username: 'u', email: 'e', role: 'r', display_name: 'd' }),
+      );
     vi.stubGlobal('fetch', fetchMock);
 
     await client.getProfile();
@@ -362,7 +383,13 @@ describe('Auth 方法', () => {
     client.setTokens({ accessToken: 'tok', refreshToken: 'r' });
 
     const fetchMock = vi.fn().mockReturnValue(
-      mockFetchResponse({ id: 1, username: 'admin', email: 'a@b.com', role: 'admin', display_name: 'Admin' }),
+      mockFetchResponse({
+        id: 1,
+        username: 'admin',
+        email: 'a@b.com',
+        role: 'admin',
+        display_name: 'Admin',
+      }),
     );
     vi.stubGlobal('fetch', fetchMock);
 
@@ -372,7 +399,13 @@ describe('Auth 方法', () => {
       'http://localhost:3000/api/auth/me',
       expect.objectContaining({ method: 'GET' }),
     );
-    expect(result).toEqual({ id: 1, username: 'admin', email: 'a@b.com', role: 'admin', display_name: 'Admin' });
+    expect(result).toEqual({
+      id: 1,
+      username: 'admin',
+      email: 'a@b.com',
+      role: 'admin',
+      display_name: 'Admin',
+    });
   });
 });
 
@@ -386,8 +419,15 @@ describe('Workout 方法', () => {
     client.setTokens({ accessToken: 'tok', refreshToken: 'r' });
 
     const workouts = [
-      { id: 'w1', date: '2025-01-01', exerciseType: 'jump_rope', count: 100 },
-    ] as any;
+      {
+        id: 'w1',
+        exerciseType: 'jump_rope' as const,
+        mode: 'count' as const,
+        count: 100,
+        duration: 60,
+        timestamp: Date.now(),
+      },
+    ];
 
     const fetchMock = vi.fn().mockReturnValue(
       mockFetchResponse({ synced: 1, lastSync: '2025-01-01T00:00:00Z' }),
@@ -554,7 +594,13 @@ describe('Pilot 方法', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    const data = { schoolId: 's1', classId: 'c1', name: 'Zhang San', studentNo: '001', gender: 'male' };
+    const data = {
+      schoolId: 's1',
+      classId: 'c1',
+      name: 'Zhang San',
+      studentNo: '001',
+      gender: 'male',
+    };
     await client.upsertStudent(data);
 
     expect(fetchMock).toHaveBeenCalledWith(
