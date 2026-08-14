@@ -54,9 +54,11 @@ describe('构造函数和配置', () => {
     const client = new ApiClient({ baseUrl: 'https://custom.api.com/v2', timeout: 5000 });
     expect(client.getTokens()).toBeNull();
     // 验证自定义配置生效 —— 发一个请求检查 URL
-    const fetchMock = vi.fn().mockReturnValue(
-      mockFetchResponse({ id: 1, username: 'u', email: 'e', role: 'r', display_name: 'd' }),
-    );
+    const fetchMock = vi
+      .fn()
+      .mockReturnValue(
+        mockFetchResponse({ id: 1, username: 'u', email: 'e', role: 'r', display_name: 'd' }),
+      );
     vi.stubGlobal('fetch', fetchMock);
 
     client.setTokens({ accessToken: 'tok', refreshToken: 'ref' });
@@ -211,7 +213,8 @@ describe('JWT 刷新', () => {
     const client = new ApiClient();
     client.setTokens({ accessToken: 'old-access', refreshToken: 'valid-refresh' });
 
-    const fetchMock = vi.fn()
+    const fetchMock = vi
+      .fn()
       // 第一次调用 getProfile → 401
       .mockReturnValueOnce(mockFetchError(401, 'Unauthorized'))
       // 第二次调用 refresh → 成功
@@ -237,11 +240,10 @@ describe('JWT 刷新', () => {
     const client = new ApiClient();
     client.setTokens({ accessToken: 'old', refreshToken: 'refresh-tok' });
 
-    const fetchMock = vi.fn()
+    const fetchMock = vi
+      .fn()
       .mockReturnValueOnce(mockFetchError(401, 'Unauthorized'))
-      .mockReturnValueOnce(
-        mockFetchResponse({ accessToken: 'new-a', refreshToken: 'new-r' }),
-      )
+      .mockReturnValueOnce(mockFetchResponse({ accessToken: 'new-a', refreshToken: 'new-r' }))
       .mockReturnValueOnce(
         mockFetchResponse({ id: 1, username: 'u', email: 'e', role: 'r', display_name: 'd' }),
       );
@@ -286,7 +288,8 @@ describe('JWT 刷新', () => {
     const client = new ApiClient();
     client.setTokens({ accessToken: 'old', refreshToken: 'bad-refresh' });
 
-    const fetchMock = vi.fn()
+    const fetchMock = vi
+      .fn()
       // getProfile → 401
       .mockReturnValueOnce(mockFetchError(401, 'Unauthorized'))
       // refresh → 失败
@@ -306,8 +309,7 @@ describe('JWT 刷新', () => {
     const client = new ApiClient();
     client.setTokens({ accessToken: 'old', refreshToken: '' });
 
-    const fetchMock = vi.fn()
-      .mockReturnValue(mockFetchError(401, 'Unauthorized'));
+    const fetchMock = vi.fn().mockReturnValue(mockFetchError(401, 'Unauthorized'));
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(client.getProfile()).rejects.toThrow();
@@ -356,9 +358,9 @@ describe('Auth 方法', () => {
   it('16. register() 发送正确请求', async () => {
     const client = new ApiClient();
 
-    const fetchMock = vi.fn().mockReturnValue(
-      mockFetchResponse({ id: 2, username: 'newuser', role: 'user' }),
-    );
+    const fetchMock = vi
+      .fn()
+      .mockReturnValue(mockFetchResponse({ id: 2, username: 'newuser', role: 'user' }));
     vi.stubGlobal('fetch', fetchMock);
 
     const result = await client.register('newuser', 'pass', 'user', 'New User');
@@ -429,9 +431,9 @@ describe('Workout 方法', () => {
       },
     ];
 
-    const fetchMock = vi.fn().mockReturnValue(
-      mockFetchResponse({ synced: 1, lastSync: '2025-01-01T00:00:00Z' }),
-    );
+    const fetchMock = vi
+      .fn()
+      .mockReturnValue(mockFetchResponse({ synced: 1, lastSync: '2025-01-01T00:00:00Z' }));
     vi.stubGlobal('fetch', fetchMock);
 
     await client.syncWorkouts(workouts);
@@ -449,9 +451,7 @@ describe('Workout 方法', () => {
     const client = new ApiClient();
     client.setTokens({ accessToken: 'tok', refreshToken: 'r' });
 
-    const fetchMock = vi.fn().mockReturnValue(
-      mockFetchResponse({ workouts: [], lastSync: null }),
-    );
+    const fetchMock = vi.fn().mockReturnValue(mockFetchResponse({ workouts: [], lastSync: null }));
     vi.stubGlobal('fetch', fetchMock);
 
     await client.pullWorkouts();
@@ -466,9 +466,9 @@ describe('Workout 方法', () => {
     const client = new ApiClient();
     client.setTokens({ accessToken: 'tok', refreshToken: 'r' });
 
-    const fetchMock = vi.fn().mockReturnValue(
-      mockFetchResponse({ workouts: [], lastSync: '2025-06-01' }),
-    );
+    const fetchMock = vi
+      .fn()
+      .mockReturnValue(mockFetchResponse({ workouts: [], lastSync: '2025-06-01' }));
     vi.stubGlobal('fetch', fetchMock);
 
     await client.pullWorkouts('2025-06-01T00:00:00Z');
@@ -483,9 +483,9 @@ describe('Workout 方法', () => {
     const client = new ApiClient();
     client.setTokens({ accessToken: 'tok', refreshToken: 'r' });
 
-    const fetchMock = vi.fn().mockReturnValue(
-      mockFetchResponse({ totalWorkouts: 10, totalDuration: 300 }),
-    );
+    const fetchMock = vi
+      .fn()
+      .mockReturnValue(mockFetchResponse({ totalWorkouts: 10, totalDuration: 300 }));
     vi.stubGlobal('fetch', fetchMock);
 
     await client.getWorkoutStats();
@@ -506,9 +506,7 @@ describe('Pilot 方法', () => {
     const client = new ApiClient();
     client.setTokens({ accessToken: 'tok', refreshToken: 'r' });
 
-    const fetchMock = vi.fn().mockReturnValue(
-      mockFetchResponse([{ id: 's1', name: 'School A' }]),
-    );
+    const fetchMock = vi.fn().mockReturnValue(mockFetchResponse([{ id: 's1', name: 'School A' }]));
     vi.stubGlobal('fetch', fetchMock);
 
     await client.listSchools();
@@ -553,9 +551,9 @@ describe('Pilot 方法', () => {
     const client = new ApiClient();
     client.setTokens({ accessToken: 'tok', refreshToken: 'r' });
 
-    const fetchMock = vi.fn().mockReturnValue(
-      mockFetchResponse({ id: 'c1', schoolId: 's1', name: 'Class 1' }),
-    );
+    const fetchMock = vi
+      .fn()
+      .mockReturnValue(mockFetchResponse({ id: 'c1', schoolId: 's1', name: 'Class 1' }));
     vi.stubGlobal('fetch', fetchMock);
 
     const data = { schoolId: 's1', name: 'Class 1', grade: '5', teacherName: 'Mr. Li' };
@@ -589,9 +587,7 @@ describe('Pilot 方法', () => {
     const client = new ApiClient();
     client.setTokens({ accessToken: 'tok', refreshToken: 'r' });
 
-    const fetchMock = vi.fn().mockReturnValue(
-      mockFetchResponse({ id: 'st1', name: 'Zhang San' }),
-    );
+    const fetchMock = vi.fn().mockReturnValue(mockFetchResponse({ id: 'st1', name: 'Zhang San' }));
     vi.stubGlobal('fetch', fetchMock);
 
     const data = {
@@ -616,9 +612,9 @@ describe('Pilot 方法', () => {
     const client = new ApiClient();
     client.setTokens({ accessToken: 'tok', refreshToken: 'r' });
 
-    const fetchMock = vi.fn().mockReturnValue(
-      mockFetchResponse({ imported: 3, ids: ['id1', 'id2', 'id3'] }),
-    );
+    const fetchMock = vi
+      .fn()
+      .mockReturnValue(mockFetchResponse({ imported: 3, ids: ['id1', 'id2', 'id3'] }));
     vi.stubGlobal('fetch', fetchMock);
 
     const data = {
@@ -660,9 +656,7 @@ describe('Pilot 方法', () => {
     const client = new ApiClient();
     client.setTokens({ accessToken: 'tok', refreshToken: 'r' });
 
-    const fetchMock = vi.fn().mockReturnValue(
-      mockFetchResponse({ id: 't1', name: 'Jump Rope' }),
-    );
+    const fetchMock = vi.fn().mockReturnValue(mockFetchResponse({ id: 't1', name: 'Jump Rope' }));
     vi.stubGlobal('fetch', fetchMock);
 
     const data = {
@@ -688,9 +682,7 @@ describe('Pilot 方法', () => {
     const client = new ApiClient();
     client.setTokens({ accessToken: 'tok', refreshToken: 'r' });
 
-    const fetchMock = vi.fn().mockReturnValue(
-      mockFetchResponse({ taskId: 't1', results: [] }),
-    );
+    const fetchMock = vi.fn().mockReturnValue(mockFetchResponse({ taskId: 't1', results: [] }));
     vi.stubGlobal('fetch', fetchMock);
 
     await client.getTaskResults('task-abc');
@@ -711,9 +703,7 @@ describe('Report 方法', () => {
     const client = new ApiClient();
     client.setTokens({ accessToken: 'tok', refreshToken: 'r' });
 
-    const fetchMock = vi.fn().mockReturnValue(
-      mockFetchResponse({ classId: 'c1', summary: {} }),
-    );
+    const fetchMock = vi.fn().mockReturnValue(mockFetchResponse({ classId: 'c1', summary: {} }));
     vi.stubGlobal('fetch', fetchMock);
 
     await client.getClassSummary('c1', 'jump_rope');
@@ -728,9 +718,7 @@ describe('Report 方法', () => {
     const client = new ApiClient();
     client.setTokens({ accessToken: 'tok', refreshToken: 'r' });
 
-    const fetchMock = vi.fn().mockReturnValue(
-      mockFetchResponse({ schoolId: 's1', summary: {} }),
-    );
+    const fetchMock = vi.fn().mockReturnValue(mockFetchResponse({ schoolId: 's1', summary: {} }));
     vi.stubGlobal('fetch', fetchMock);
 
     await client.getSchoolSummary('s1');
@@ -745,9 +733,9 @@ describe('Report 方法', () => {
     const client = new ApiClient();
     client.setTokens({ accessToken: 'tok', refreshToken: 'r' });
 
-    const fetchMock = vi.fn().mockReturnValue(
-      mockFetchResponse({ studentId: 'st1', progress: [] }),
-    );
+    const fetchMock = vi
+      .fn()
+      .mockReturnValue(mockFetchResponse({ studentId: 'st1', progress: [] }));
     vi.stubGlobal('fetch', fetchMock);
 
     await client.getStudentProgress('st1', 'jump_rope');

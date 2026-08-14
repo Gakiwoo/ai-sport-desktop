@@ -14,7 +14,11 @@ export default function CloudConnect({ onConnected }: CloudConnectProps) {
   const [serverUrl, setServerUrl] = useState(() => getBaseUrl());
   const [showForm, setShowForm] = useState(false);
 
-  const status: ConnectionStatus = loading ? 'connecting' : connected ? 'connected' : 'disconnected';
+  const status: ConnectionStatus = loading
+    ? 'connecting'
+    : connected
+      ? 'connected'
+      : 'disconnected';
 
   const handleLogin = async (event: FormEvent) => {
     event.preventDefault();
@@ -50,7 +54,11 @@ export default function CloudConnect({ onConnected }: CloudConnectProps) {
         <div className="cloud-connect-user">
           <span className="cloud-connect-username">{user.username}</span>
           <span className="cloud-connect-role">{user.role}</span>
-          <button type="button" className="cloud-connect-btn cloud-connect-btn--disconnect" onClick={handleDisconnect}>
+          <button
+            type="button"
+            className="cloud-connect-btn cloud-connect-btn--disconnect"
+            onClick={handleDisconnect}
+          >
             断开
           </button>
         </div>
@@ -81,7 +89,11 @@ export default function CloudConnect({ onConnected }: CloudConnectProps) {
             <button type="submit" className="cloud-connect-btn" disabled={loading}>
               {loading ? '连接中...' : '连接'}
             </button>
-            <button type="button" className="cloud-connect-btn cloud-connect-btn--cancel" onClick={() => setShowForm(false)}>
+            <button
+              type="button"
+              className="cloud-connect-btn cloud-connect-btn--cancel"
+              onClick={() => setShowForm(false)}
+            >
               取消
             </button>
           </div>

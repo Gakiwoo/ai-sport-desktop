@@ -27,16 +27,16 @@ interface CloudStudent {
 type TabKey = 'file' | 'cloud';
 
 const HEADER_ALIASES: Record<string, keyof ParsedStudent> = {
-  '姓名': 'name',
-  'name': 'name',
-  '学生姓名': 'name',
-  '学号': 'studentNo',
-  'studentno': 'studentNo',
-  'student_no': 'studentNo',
-  '编号': 'studentNo',
-  '性别': 'gender',
-  'gender': 'gender',
-  'sex': 'gender',
+  姓名: 'name',
+  name: 'name',
+  学生姓名: 'name',
+  学号: 'studentNo',
+  studentno: 'studentNo',
+  student_no: 'studentNo',
+  编号: 'studentNo',
+  性别: 'gender',
+  gender: 'gender',
+  sex: 'gender',
 };
 
 function parseCsvLine(line: string): string[] {
@@ -72,7 +72,10 @@ function parseCsvLine(line: string): string[] {
 function detectColumnMapping(headers: string[]): Record<keyof ParsedStudent, number> {
   const mapping: Record<keyof ParsedStudent, number> = { name: -1, studentNo: -1, gender: -1 };
   headers.forEach((header, index) => {
-    const normalized = header.trim().toLowerCase().replace(/[\s_-]/g, '');
+    const normalized = header
+      .trim()
+      .toLowerCase()
+      .replace(/[\s_-]/g, '');
     const key = HEADER_ALIASES[header.trim()] ?? HEADER_ALIASES[normalized];
     if (key && mapping[key] === -1) {
       mapping[key] = index;
@@ -351,9 +354,7 @@ export default function BatchImportModal({
                     </tbody>
                   </table>
                   {parsedStudents.length > 50 && (
-                    <p className="batch-preview-more">
-                      ...还有 {parsedStudents.length - 50} 条
-                    </p>
+                    <p className="batch-preview-more">...还有 {parsedStudents.length - 50} 条</p>
                   )}
                 </div>
               )}
@@ -382,10 +383,18 @@ export default function BatchImportModal({
                 </button>
                 {cloudStudents.length > 0 && (
                   <>
-                    <button type="button" className="batch-link-btn" onClick={() => toggleAllCloud(true)}>
+                    <button
+                      type="button"
+                      className="batch-link-btn"
+                      onClick={() => toggleAllCloud(true)}
+                    >
                       全选
                     </button>
-                    <button type="button" className="batch-link-btn" onClick={() => toggleAllCloud(false)}>
+                    <button
+                      type="button"
+                      className="batch-link-btn"
+                      onClick={() => toggleAllCloud(false)}
+                    >
                       取消全选
                     </button>
                   </>
@@ -415,7 +424,9 @@ export default function BatchImportModal({
                   onClick={importFromCloud}
                   disabled={cloudStudents.filter((s) => s.selected).length === 0 || importing}
                 >
-                  {importing ? '导入中...' : `导入选中 (${cloudStudents.filter((s) => s.selected).length})`}
+                  {importing
+                    ? '导入中...'
+                    : `导入选中 (${cloudStudents.filter((s) => s.selected).length})`}
                 </button>
               )}
             </div>

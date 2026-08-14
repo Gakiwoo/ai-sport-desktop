@@ -365,8 +365,13 @@
 }
 
 @keyframes cloud-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 .cloud-connect-label {
@@ -556,7 +561,9 @@
 }
 
 @keyframes cloud-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .cloud-sync-result {
@@ -674,7 +681,9 @@
   padding: 28px 16px;
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
 .batch-drop-zone:hover,
