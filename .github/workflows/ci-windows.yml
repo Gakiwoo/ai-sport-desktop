@@ -34,6 +34,7 @@ jobs:
           sparse-checkout: packages/ai-sport-core
 
       - name: Place @ai-sport/core source
+        shell: bash
         run: |
           mkdir -p ../packages
           cp -r parent/packages/ai-sport-core ../packages/
