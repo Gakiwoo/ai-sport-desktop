@@ -13,6 +13,8 @@ export default function CloudConnect({ onConnected }: CloudConnectProps) {
   const [password, setPassword] = useState('');
   const [serverUrl, setServerUrl] = useState(() => getBaseUrl());
   const [showForm, setShowForm] = useState(false);
+  // 本地校验错误（URL 格式/协议），与 useApi 的网络错误分开展示
+  const [localError, setLocalError] = useState('');
 
   const status: ConnectionStatus = loading
     ? 'connecting'
@@ -23,7 +25,29 @@ export default function CloudConnect({ onConnected }: CloudConnectProps) {
   const handleLogin = async (event: FormEvent) => {
     event.preventDefault();
     if (!username.trim() || !password.trim()) return;
-    setBaseUrl(serverUrl.trim());
+
+    // P1-5：校验服务器地址——必须是 http/https 且非 http 时仅允许本机回环地址。
+    // 生产 Tauri 的 CSP connect-src 仅放行 localhost:3000 与白名单 https 域，
+    // 任意 http:// 远端正被 CSP 拦截且会明文传输密码。
+    const raw = serverUrl.trim();
+    let url: URL;
+    try {
+      url = new URL(raw);
+    } catch {
+      setLocalError('服务器地址格式无效，需包含协议，如 http://localhost:3000/api');
+      return;
+    }
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      setLocalError('仅支持 http/https 协议的服务器地址');
+      return;
+    }
+    if (url.protocol === 'http:' && url.hostname !== 'localhost' && url.hostname !== '127.0.0.1') {
+      setLocalError('http 仅允许连接本机（localhost/127.0.0.1）；远程服务器必须使用 https');
+      return;
+    }
+
+    setLocalError('');
+    setBaseUrl(raw);
     try {
       await login(username.trim(), password);
       setShowForm(false);
@@ -97,7 +121,8 @@ export default function CloudConnect({ onConnected }: CloudConnectProps) {
               取消
             </button>
           </div>
-          {error && <p className="cloud-connect-error">{error}</p>}
+          {localError && <p className="cloud-connect-error">{localError}</p>}
+          {!localError && error && <p className="cloud-connect-error">{error}</p>}
         </form>
       ) : (
         <button type="button" className="cloud-connect-btn" onClick={() => setShowForm(true)}>

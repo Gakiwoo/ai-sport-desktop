@@ -89,13 +89,20 @@ describe('TauriStoreAdapter', () => {
     expect(store.save).toHaveBeenCalled();
   });
 
-  it('初始化失败时所有操作优雅降级而不抛错', async () => {
+  it('初始化失败时真实降级到 localStorage：读写均有真实落盘（P1-13）', async () => {
     (load as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('no tauri'));
     const degraded = new TauriStoreAdapter();
     await degraded.get('x'); // flush init
-    expect(await degraded.get('x')).toBeNull();
-    await expect(degraded.set('k', 'v')).resolves.toBeUndefined();
-    expect(await degraded.keys()).toEqual([]);
-    await expect(degraded.clear()).resolves.toBeUndefined();
+
+    // 写入后能从 localStorage 读回（此前是静默丢弃）
+    await degraded.set('persist-key', 'persist-value');
+    expect(await degraded.get('persist-key')).toBe('persist-value');
+    expect(localStorage.getItem('persist-key')).toBe('persist-value');
+
+    expect(await degraded.keys()).toContain('persist-key');
+
+    await degraded.remove('persist-key');
+    expect(await degraded.get('persist-key')).toBeNull();
+    expect(localStorage.getItem('persist-key')).toBeNull();
   });
 });

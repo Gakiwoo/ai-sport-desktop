@@ -67,11 +67,12 @@ const EXERCISE_FILTER_OPTIONS: Array<{ value: ExerciseFilter; label: string }> =
   ...EXERCISE_CONFIGS.map((item) => ({ value: item.type, label: item.name })),
 ];
 
-/* ── 后端返回值的防御性解析（apiClient 返回 Record<string, unknown>） ── */
+/* ── 后端返回值的防御性解析（兼容 snake_case/camelCase 及类型化响应） ── */
 
-function pick(obj: Record<string, unknown>, keys: string[]): unknown {
+function pick(obj: object, keys: string[]): unknown {
+  const record = obj as Record<string, unknown>;
   for (const key of keys) {
-    const v = obj[key];
+    const v = record[key];
     if (v !== undefined && v !== null) return v;
   }
   return undefined;
@@ -98,10 +99,7 @@ function toTrendPct(v: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-function parseClassSummary(
-  raw: Record<string, unknown>,
-  studentNames: Map<string, string>,
-): ClassSummaryData {
+function parseClassSummary(raw: object, studentNames: Map<string, string>): ClassSummaryData {
   let completionRate = toNum(pick(raw, ['completionRate', 'completion_rate', 'completion']), 0);
   if (completionRate > 0 && completionRate <= 1) completionRate *= 100;
 
@@ -155,7 +153,7 @@ function formatPointLabel(v: unknown): string {
   return s;
 }
 
-function parseStudentProgress(raw: Record<string, unknown>): StudentProgressData {
+function parseStudentProgress(raw: object): StudentProgressData {
   const rawPoints = pick(raw, ['points', 'progress', 'records', 'sessions', 'history']);
   const points: ProgressPoint[] = Array.isArray(rawPoints)
     ? rawPoints
@@ -246,8 +244,8 @@ export default function ReportPage() {
     apiClient
       .listClassrooms()
       .then((list) => {
+        // list 已由 ApiClient 类型化为 Classroom[]；pick() 兼容 snake/camel 两种字段名
         const options: ClassOption[] = list
-          .filter((c): c is Record<string, unknown> => Boolean(c) && typeof c === 'object')
           .map((c) => ({
             id: toStr(pick(c, ['id', 'classId'])),
             name: toStr(pick(c, ['name', 'className']), '未命名班级'),
@@ -282,7 +280,7 @@ export default function ReportPage() {
 
     Promise.all([
       apiClient.getClassSummary(selectedClassId, exerciseParam),
-      apiClient.listStudents(selectedClassId).catch(() => [] as Array<Record<string, unknown>>),
+      apiClient.listStudents(selectedClassId).catch(() => []),
     ])
       .then(([summaryRaw, studentList]) => {
         if (seq !== summarySeq.current) return;

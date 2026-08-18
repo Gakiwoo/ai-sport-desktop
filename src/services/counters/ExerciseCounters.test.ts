@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { KEYPOINT_NAMES } from '../../constants/exerciseConfig';
 import { Pose, Keypoint } from '../../types';
+// P1-14 迁移注记：已试验直接引用 '@ai-sport/core' 计数器（19/33 通过），
+// 14 个失败用例为行为差异（阈值/状态机已分化），需按 core 行为重写序列并真机验收后
+// 才能删除本地副本。届时将本文件 import 改回 '@ai-sport/core'。
 import { JumpingJacksCounter } from './JumpingJacksCounter';
 import { JumpRopeCounter } from './JumpRopeCounter';
 import { SitUpCounter } from './SitUpCounter';

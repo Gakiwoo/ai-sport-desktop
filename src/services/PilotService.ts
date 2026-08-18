@@ -15,7 +15,7 @@ import {
 } from '../types';
 import { EXERCISE_NAMES } from '../constants/exerciseConfig';
 import { type SpreadsheetRow, createXlsxWorkbook, escapeCsv, toBlobPart } from '../utils/xlsx';
-import { scoreSession, type ScoringResult } from './scoring';
+import { scoreSession, type ScoringResult } from '@ai-sport/core';
 import { createStorageAdapter } from './storage/createStorageAdapter';
 import type { IStorageAdapter } from './storage/IStorageAdapter';
 import ErrorReporter from './ErrorReporter';

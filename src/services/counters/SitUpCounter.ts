@@ -170,7 +170,8 @@ export class SitUpCounter extends ExerciseCounter {
         this.isInLyingBaseline = true;
         this.phase = 'lying';
         this.lastState = 'lying';
-        this.cycleStartFrame = this.totalFrames;
+        // 修复 P0-5：周期起点不在此设置——躺卧等待/组间休息不计入周期，
+        // 否则 30fps 下休息 ≥3s（MAX_CYCLE_FRAMES=90）被误判 incomplete_up 漏计。
         this.prevAngle = smoothAngle;
       }
       return;
@@ -198,7 +199,6 @@ export class SitUpCounter extends ExerciseCounter {
           this.phase = 'lying';
           this.lastState = 'lying';
           this.phaseFrameCount = 0;
-          this.cycleStartFrame = this.totalFrames;
         }
         break;
     }
@@ -207,6 +207,9 @@ export class SitUpCounter extends ExerciseCounter {
   private handleLying(angle: number, _hipY: number): void {
     if (angle < this.LYING_ANGLE_MIN - 20) {
       if (this.phaseFrameCount >= this.CONFIRM_FRAMES_LYING_TO_RISING) {
+        // 修复 P0-5：周期起点从"开始起身"起算，躺卧等待不计入周期，
+        // 避免休息超时被误判 incomplete_up 犯规而漏计。
+        this.cycleStartFrame = this.totalFrames;
         this.transitionTo('rising');
       }
     } else {
@@ -226,8 +229,8 @@ export class SitUpCounter extends ExerciseCounter {
     }
     if (this.angleDirection === 'lying_back' && this.phaseFrameCount > 3) {
       if (angle > this.prevAngle + 15) {
+        // 未完成坐起就倒回 → 不计数（周期起点留待下一次真正起身时重新设置）
         this.transitionTo('lying');
-        this.cycleStartFrame = this.totalFrames;
       }
     }
     this.prevAngle = angle;
@@ -263,8 +266,11 @@ export class SitUpCounter extends ExerciseCounter {
   private recordValidSitUp(): void {
     const cycleFrames = this.totalFrames - this.cycleStartFrame;
 
+    // 修复 P0-5：臀部离垫犯规必须"消费"标记——本次不计（与文案一致），
+    // 但立即清除 lastFoul，防止泄漏到后续周期导致计数永久冻结。
     if (this.lastFoul === 'hip_lift') {
       this.foulCount++;
+      this.lastFoul = null;
       return;
     }
 

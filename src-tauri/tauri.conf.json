@@ -24,7 +24,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://gakiwoo.com https://cdn.jsdelivr.net https://unpkg.com https://registry.npmmirror.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: mediastream:; connect-src 'self' https://gakiwoo.com https://cdn.jsdelivr.net https://unpkg.com https://registry.npmmirror.com https://github.com; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'"
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://gakiwoo.com https://cdn.jsdelivr.net https://unpkg.com https://registry.npmmirror.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: mediastream:; connect-src 'self' http://localhost:3000 ws://localhost:3000 https://gakiwoo.com https://cdn.jsdelivr.net https://unpkg.com https://registry.npmmirror.com https://github.com; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'"
     }
   },
   "bundle": {

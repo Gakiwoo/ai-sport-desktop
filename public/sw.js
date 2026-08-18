@@ -13,17 +13,21 @@
  *   - pose.js（46 KB）
  *
  * 版本：递增此值强制刷新所有缓存
+ *
+ * 注意：本文件是纯 JS（public/ 原样拷贝，不经过 TS 编译）。
+ * 不要写 TypeScript 类型注解（如 `event: ExtendableEvent`），
+ * 浏览器解析会直接 SyntaxError 导致 SW 注册失败。
  */
 const CACHE_VERSION = 'ai-sport-models-v1';
 const MODEL_EXTENSIONS = /\.(wasm|tflite|data|bin)$/i;
 const MODEL_PATH_SEGMENTS = ['mediapipe', 'pose'];
 
-self.addEventListener('install', (event: ExtendableEvent) => {
+self.addEventListener('install', (event) => {
   // 不预缓存（模型文件在首次使用时才下载），直接激活
-  (self as unknown as ServiceWorkerGlobalScope).skipWaiting();
+  self.skipWaiting();
 });
 
-self.addEventListener('activate', (event: ExtendableEvent) => {
+self.addEventListener('activate', (event) => {
   // 清理旧版本缓存
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -32,10 +36,10 @@ self.addEventListener('activate', (event: ExtendableEvent) => {
       ),
     ),
   );
-  (self as unknown as ServiceWorkerGlobalScope).clients.claim();
+  self.clients.claim();
 });
 
-function isModelAsset(url: URL): boolean {
+function isModelAsset(url) {
   const path = url.pathname.toLowerCase();
   return (
     MODEL_EXTENSIONS.test(path) ||
@@ -43,7 +47,7 @@ function isModelAsset(url: URL): boolean {
   );
 }
 
-self.addEventListener('fetch', (event: FetchEvent) => {
+self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   // 仅缓存 GET 请求
