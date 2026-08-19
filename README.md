@@ -2,7 +2,7 @@
 
 基于 **Tauri 2 + React 18 + TypeScript** 构建的 AI 运动计数桌面应用。通过摄像头实时捕捉人体骨骼关键点（MediaPipe Pose），结合卡尔曼滤波与状态机算法，自动识别并计数 6 种常见运动。
 
-> 当前状态（2026-07-24 更新）：`npm run check`（ESLint + Prettier + 24 Vitest files / 197 tests）全绿，前端构建、Rust release check 和 0 vulnerability 审计通过。Windows CI 已产出 x64 EXE/NSIS，macOS CI 已产出 arm64 DMG。2026-07-20 已配置真实 Ed25519 updater 签名密钥（非占位符）。产物仍未做 Authenticode/notarization 签名，安装、卸载、升级和回滚待验收。系统级口径见[当前工程基线](../AI-Sport-System-当前工程基线-2026-07-24.md)。
+> 当前状态（2026-08-19 更新）：`npm run check`（ESLint + Prettier + 25 Vitest files / 236 tests）全绿，前端构建、Rust release check 和 0 vulnerability 审计通过。Windows CI 已产出 x64 EXE/NSIS，macOS CI 已产出 arm64 DMG。2026-07-20 已配置真实 Ed25519 updater 签名密钥（非占位符）。摄像头兼容性改造（多设备选择、权限预检、多级降级、分辨率调优、错误分类指引）已落地。产物仍未做 Authenticode/notarization 签名，安装、卸载、升级和回滚待验收。系统级口径见[当前工程基线](../AI-Sport-System-当前工程基线-2026-07-24.md)。
 
 ## 技术栈
 
@@ -207,6 +207,20 @@ scripts/                      # 辅助脚本
 - ✅ **推理超时保护**：`pose.send()` 500ms 超时；实际推理耗时需按目标硬件测量
 - ✅ **自建 CDN**：`gakiwoo.com/static/mediapipe/pose/` 提供模型资源；2026-07-11 已确认 lite 模型 HTTP 200
 - ✅ **帧间隔自适应**：ExerciseCounter 基类支持 frameIntervalMs，适配不同帧率设备
+
+## 摄像头兼容性
+
+针对不同品牌/驱动的摄像头做了多层兼容与降级，覆盖 Windows WebView2 与 macOS WebKit：
+
+- ✅ **权限声明**：Windows 无需额外声明；macOS 已在 `tauri.conf.json` 配置 `NSCameraUsageDescription`，首次访问弹系统授权
+- ✅ **权限预检**：`navigator.permissions.query({ name: 'camera' })` 提前探测，已拒绝时直接给出指引，不触发空转的 getUserMedia
+- ✅ **设备枚举 + 热插拔**：监听 `devicechange`，USB 摄像头插拔自动刷新；多摄像头时渲染下拉选择器
+- ✅ **多级降级**：指定设备失败 → 自动退回系统默认摄像头 → 最宽松约束（`video: true`）
+- ✅ **分辨率调优**：按 `getCapabilities()` 能力范围设置 `ideal` 宽高（640×480 为理想值），老式 320p 与 4K 摄像头均能打开；`applyConstraints` 失败时静默沿用默认分辨率
+- ✅ **错误分类指引**：按 `DOMException.name`（NotAllowed/NotFound/NotReadable/Overconstrained/SecurityError/AbortError）分类返回中文指引，并展示检测到的设备数量
+- ✅ **一键重试**：错误态提供「重试」按钮，重置初始化状态后重新走完整流程
+- ✅ **物理断连检测**：`track ended` 监听，摄像头被拔出或被占用时立即提示
+- ✅ **模型复用**：切换摄像头时复用已加载的 MediaPipe 模型与视频流，不重复下载、不重复开流
 
 ## macOS 构建注意事项
 

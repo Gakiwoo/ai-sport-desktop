@@ -6,6 +6,7 @@ interface CameraOverlayProps {
   isActive: boolean;
   loadingStep: string;
   errorMsg: string;
+  onRetry?: () => void;
 }
 
 /**
@@ -17,6 +18,7 @@ const CameraOverlay = memo(function CameraOverlay({
   isActive,
   loadingStep,
   errorMsg,
+  onRetry,
 }: CameraOverlayProps) {
   // ── 空闲状态（摄像头未启动） ──
   if (!isActive && (cameraState === 'idle' || cameraState === 'loading')) {
@@ -83,6 +85,11 @@ const CameraOverlay = memo(function CameraOverlay({
         </span>
         <p className="error-title">摄像头不可用</p>
         <p className="error-msg">{errorMsg}</p>
+        {onRetry && (
+          <button type="button" className="error-retry-btn" onClick={onRetry}>
+            重试
+          </button>
+        )}
       </div>
     );
   }
